@@ -1,6 +1,6 @@
 // src/db/messages.ts
-import { supabase } from '@/lib/supabase';
-import type { Message, MessageInsert } from '@/types/database.types';
+import supabase from '../../utils/supabase';
+import type { Message, MessageInsert } from '../types/database.types';
 
 export const messagesDb = {
   /**

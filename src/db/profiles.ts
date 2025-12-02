@@ -1,6 +1,6 @@
 // src/db/profiles.ts
-import { supabase } from '@/lib/supabase';
-import type { Profile, ProfileUpdate } from '@/types/database.types';
+import supabase from '../../utils/supabase';
+import type { Profile, ProfileUpdate } from '../types/database.types';
 
 export const profilesDb = {
   /**

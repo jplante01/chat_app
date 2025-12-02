@@ -1,6 +1,6 @@
 // src/db/conversations.ts
-import { supabase } from '@/lib/supabase';
-import type { Conversation } from '@/types/database.types';
+import supabase from '../../utils/supabase';
+import type { Conversation } from '../types/database.types';
 
 export const conversationsDb = {
   /**
