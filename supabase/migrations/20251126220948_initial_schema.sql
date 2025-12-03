@@ -2,7 +2,7 @@ CREATE TABLE profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   username TEXT UNIQUE NOT NULL,
   avatar_url TEXT,
-  status TEXT DEFAULT 'offline', -- online, offline, away
+  status TEXT DEFAULT 'offline' CHECK (status IN ('online', 'offline', 'away')),
   last_seen_at TIMESTAMPTZ DEFAULT NOW(),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -39,9 +39,11 @@ CREATE TABLE messages (
 );
 
 -- Indexes for query performance
+CREATE INDEX idx_conversations_updated_at ON conversations(updated_at DESC);
 CREATE INDEX idx_messages_conversation_id ON messages(conversation_id);
 CREATE INDEX idx_messages_sender_id ON messages(sender_id);
 CREATE INDEX idx_messages_created_at ON messages(created_at);
+CREATE INDEX idx_messages_not_deleted ON messages(conversation_id, created_at) WHERE deleted_at IS NULL;
 CREATE INDEX idx_conversation_participants_user_id ON conversation_participants(user_id);
 CREATE INDEX idx_conversation_participants_conversation_id ON conversation_participants(conversation_id);
 
