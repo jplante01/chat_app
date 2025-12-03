@@ -37,3 +37,10 @@ CREATE TABLE messages (
   reply_to_id UUID REFERENCES messages(id) ON DELETE SET NULL,
   edited BOOLEAN DEFAULT FALSE
 );
+
+-- Indexes for query performance
+CREATE INDEX idx_messages_conversation_id ON messages(conversation_id);
+CREATE INDEX idx_messages_sender_id ON messages(sender_id);
+CREATE INDEX idx_messages_created_at ON messages(created_at);
+CREATE INDEX idx_conversation_participants_user_id ON conversation_participants(user_id);
+CREATE INDEX idx_conversation_participants_conversation_id ON conversation_participants(conversation_id);
