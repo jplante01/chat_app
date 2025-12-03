@@ -44,3 +44,26 @@ CREATE INDEX idx_messages_sender_id ON messages(sender_id);
 CREATE INDEX idx_messages_created_at ON messages(created_at);
 CREATE INDEX idx_conversation_participants_user_id ON conversation_participants(user_id);
 CREATE INDEX idx_conversation_participants_conversation_id ON conversation_participants(conversation_id);
+
+-- Function to update conversation timestamp
+CREATE OR REPLACE FUNCTION update_conversation_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE conversations
+  SET updated_at = NOW()
+  WHERE id = NEW.conversation_id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to update conversation timestamp on new message
+CREATE TRIGGER update_conversation_on_message_insert
+  AFTER INSERT ON messages
+  FOR EACH ROW
+  EXECUTE FUNCTION update_conversation_timestamp();
+
+-- Trigger to update conversation timestamp on message edit
+CREATE TRIGGER update_conversation_on_message_update
+  AFTER UPDATE ON messages
+  FOR EACH ROW
+  EXECUTE FUNCTION update_conversation_timestamp();
