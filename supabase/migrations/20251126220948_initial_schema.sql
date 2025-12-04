@@ -3,15 +3,15 @@ CREATE TABLE profiles (
   username TEXT UNIQUE NOT NULL,
   avatar_url TEXT,
   status TEXT NOT NULL DEFAULT 'offline' CHECK (status IN ('online', 'offline', 'away')),
-  last_seen_at TIMESTAMPTZ DEFAULT NOW(),
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Conversations table
 CREATE TABLE conversations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Participants in each conversation
@@ -19,8 +19,8 @@ CREATE TABLE conversation_participants (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  last_read_at TIMESTAMPTZ DEFAULT NOW(),
-  joined_at TIMESTAMPTZ DEFAULT NOW(),
+  last_read_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   
   UNIQUE(conversation_id, user_id)
 );
@@ -31,11 +31,11 @@ CREATE TABLE messages (
   conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
   sender_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   content TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   deleted_at TIMESTAMPTZ, -- for soft deletes
   reply_to_id UUID REFERENCES messages(id) ON DELETE SET NULL,
-  edited BOOLEAN DEFAULT FALSE
+  edited BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 -- Indexes for query performance
