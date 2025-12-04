@@ -49,21 +49,24 @@ CREATE INDEX idx_conversation_participants_user_id ON conversation_participants(
 CREATE INDEX idx_conversation_participants_conversation_id ON conversation_participants(conversation_id);
 
 -- Function to update conversation timestamp
-CREATE OR REPLACE FUNCTION update_conversation_timestamp()
-RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION public.update_conversation_timestamp()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = ''
+AS $$
 BEGIN
-  UPDATE conversations
+  UPDATE public.conversations
   SET updated_at = NOW()
   WHERE id = NEW.conversation_id;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 -- Trigger to update conversation timestamp on new message
 CREATE TRIGGER update_conversation_on_message_insert
   AFTER INSERT ON messages
   FOR EACH ROW
-  EXECUTE FUNCTION update_conversation_timestamp();
+  EXECUTE PROCEDURE public.update_conversation_timestamp();
 
 -- Function to create profile when user signs up
 CREATE FUNCTION public.handle_new_user()
