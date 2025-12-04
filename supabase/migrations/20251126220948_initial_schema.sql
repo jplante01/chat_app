@@ -2,7 +2,7 @@ CREATE TABLE profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   username TEXT UNIQUE NOT NULL,
   avatar_url TEXT,
-  status TEXT DEFAULT 'offline' CHECK (status IN ('online', 'offline', 'away')),
+  status TEXT NOT NULL DEFAULT 'offline' CHECK (status IN ('online', 'offline', 'away')),
   last_seen_at TIMESTAMPTZ DEFAULT NOW(),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -44,6 +44,7 @@ CREATE INDEX idx_messages_conversation_id ON messages(conversation_id);
 CREATE INDEX idx_messages_sender_id ON messages(sender_id);
 CREATE INDEX idx_messages_created_at ON messages(created_at);
 CREATE INDEX idx_messages_not_deleted ON messages(conversation_id, created_at) WHERE deleted_at IS NULL;
+CREATE INDEX idx_messages_reply_to_id ON messages(reply_to_id) WHERE reply_to_id IS NOT NULL;
 CREATE INDEX idx_conversation_participants_user_id ON conversation_participants(user_id);
 CREATE INDEX idx_conversation_participants_conversation_id ON conversation_participants(conversation_id);
 
@@ -61,12 +62,6 @@ $$ LANGUAGE plpgsql;
 -- Trigger to update conversation timestamp on new message
 CREATE TRIGGER update_conversation_on_message_insert
   AFTER INSERT ON messages
-  FOR EACH ROW
-  EXECUTE FUNCTION update_conversation_timestamp();
-
--- Trigger to update conversation timestamp on message edit
-CREATE TRIGGER update_conversation_on_message_update
-  AFTER UPDATE ON messages
   FOR EACH ROW
   EXECUTE FUNCTION update_conversation_timestamp();
 
