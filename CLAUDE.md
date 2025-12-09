@@ -15,6 +15,12 @@ npm run build        # Build TypeScript and bundle for production
 npm run preview      # Preview production build locally
 ```
 
+### Testing
+```bash
+npm test             # Run tests in watch mode
+npm run test:ui      # Run tests with Vitest UI
+```
+
 ### Supabase Local Development
 ```bash
 npx supabase start   # Start local Supabase instance (DB, Auth, Storage, Studio)
@@ -107,3 +113,77 @@ npx supabase gen types typescript --local > src/types/supabase.ts
 3. **Supabase Configuration:** Project configuration is in `supabase/config.toml`. This includes settings for auth, storage, edge functions, and more.
 
 4. **Authentication:** Auth is handled by Supabase Auth. The application should maintain a user profile table linked to auth.users.
+
+## Testing
+
+### Testing Strategy
+
+This project uses **database layer testing** - testing database query functions against a real Supabase instance. This approach:
+- Tests real SQL queries, joins, and constraints
+- Verifies triggers and database functions work correctly
+- Catches Supabase-specific behavior (RLS, etc.)
+- Runs fast (no UI overhead)
+- Uses isolated test data (unique IDs per test suite)
+
+### Running Tests
+
+**Prerequisites:**
+1. Supabase must be running: `npx supabase start`
+2. Migrations must be applied: `npx supabase db reset`
+
+**Commands:**
+```bash
+npm test           # Run tests in watch mode
+npm run test:ui    # Run tests with UI
+```
+
+### Writing Tests
+
+Tests follow the **unique IDs pattern** from Supabase docs:
+
+```typescript
+import { createClient } from '@supabase/supabase-js'
+import { beforeAll, describe, expect, it } from 'vitest'
+import crypto from 'crypto'
+import { profilesDb } from '../../src/db'
+
+describe('Your Test Suite', () => {
+  const USER_ID = crypto.randomUUID()
+
+  beforeAll(async () => {
+    // Setup: Create test data using admin client (SERVICE_ROLE_KEY)
+    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+
+    await adminSupabase.auth.admin.createUser({
+      id: USER_ID,
+      email: `user@test.com`,
+      password: 'password123',
+      email_confirm: true,
+      user_metadata: { username: 'testuser' }
+    })
+  })
+
+  it('should test database function', async () => {
+    // Test: Use database layer functions
+    const profile = await profilesDb.getById(USER_ID)
+    expect(profile).toBeDefined()
+  })
+})
+```
+
+**Key points:**
+- Generate unique IDs per test suite to avoid conflicts
+- Use admin client (SERVICE_ROLE_KEY) in `beforeAll` for setup
+- Test your `src/db/*` functions, not raw Supabase queries
+- Each test suite is isolated and can run in parallel
+
+### Test File Location
+
+```
+tests/
+  └── db/
+      ├── profiles.test.ts
+      ├── conversations.test.ts
+      ├── messages.test.ts
+      └── participants.test.ts
+```
