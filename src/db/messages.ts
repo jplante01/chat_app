@@ -1,6 +1,6 @@
 // src/db/messages.ts
 import supabase from '../../utils/supabase';
-import type { MessageWithSender } from '../types/database.types';
+import type { MessageWithSender, MessageInsert } from '../types/database.types';
 
 export const messagesDb = {
   /**
@@ -21,5 +21,24 @@ export const messagesDb = {
 
     if (error) throw error;
     return data || [];
+  },
+
+  /**
+   * Create a new message
+   * Used for: Sending a message in a conversation
+   * Triggers conversation.updated_at to be updated automatically
+   */
+  create: async (message: MessageInsert): Promise<MessageWithSender> => {
+    const { data, error } = await supabase
+      .from('messages')
+      .insert(message)
+      .select(`
+        *,
+        sender:profiles(*)
+      `)
+      .single();
+
+    if (error) throw error;
+    return data;
   },
 };
