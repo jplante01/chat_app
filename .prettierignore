@@ -1,0 +1,14 @@
+# Dependencies
+node_modules
+dist
+build
+
+# Generated files
+src/types/supabase.ts
+
+# Supabase
+.supabase
+
+# Other
+coverage
+.git

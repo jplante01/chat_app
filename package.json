@@ -8,7 +8,9 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\""
   },
   "dependencies": {
     "@emotion/react": "latest",
@@ -26,6 +28,7 @@
     "@types/react-dom": "latest",
     "@vitejs/plugin-react": "latest",
     "@vitest/ui": "^4.0.15",
+    "prettier": "^3.7.4",
     "supabase": "^2.62.5",
     "typescript": "latest",
     "vite": "latest",
