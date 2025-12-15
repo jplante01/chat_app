@@ -7,7 +7,7 @@ import ChatWindow from '../components/ChatWindow';
 const drawerWidth = 240;
 
 export default function MainLayout() {
-
+  const [selectedConversationId, setSelectedConversationId] = React.useState<string | null>('1');
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [isClosing, setIsClosing] = React.useState(false);
 
@@ -35,8 +35,10 @@ export default function MainLayout() {
         isClosing={isClosing}
         onDrawerClose={handleDrawerClose}
         onDrawerTransitionEnd={handleDrawerTransitionEnd}
+        selectedConversationId={selectedConversationId}
+        onConversationSelect={setSelectedConversationId}
       />
-      <ChatWindow drawerWidth={drawerWidth}/>
+      <ChatWindow drawerWidth={drawerWidth} conversationId={selectedConversationId} />
     </Box>
   );
 }

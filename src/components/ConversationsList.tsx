@@ -1,7 +1,11 @@
-import { useState } from 'react';
 import List from '@mui/material/List';
 import { ConversationListItem } from '@/types/database.types';
 import Conversation from './Conversation';
+
+interface ConversationsListProps {
+  selectedConversationId: string | null;
+  onConversationSelect: (id: string) => void;
+}
 
 const MOCK_CONVERSATIONS: ConversationListItem[] = [
   {
@@ -153,17 +157,18 @@ const MOCK_CONVERSATIONS: ConversationListItem[] = [
   },
 ];
 
-export default function ConversationsList() {
-  const [selectedId, setSelectedId] = useState<string | null>('1');
-
+export default function ConversationsList({
+  selectedConversationId,
+  onConversationSelect,
+}: ConversationsListProps) {
   return (
     <List sx={{ width: '100%', bgcolor: 'background.paper', p: 0 }}>
       {MOCK_CONVERSATIONS.map((conversation) => (
         <Conversation
           key={conversation.id}
           conversation={conversation}
-          selected={selectedId === conversation.id}
-          onClick={() => setSelectedId(conversation.id)}
+          selected={selectedConversationId === conversation.id}
+          onClick={() => onConversationSelect(conversation.id)}
         />
       ))}
     </List>

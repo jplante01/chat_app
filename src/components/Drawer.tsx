@@ -9,12 +9,22 @@ interface DrawerProps {
   isClosing: boolean;
   onDrawerClose: () => void;
   onDrawerTransitionEnd: () => void;
+  selectedConversationId: string | null;
+  onConversationSelect: (id: string) => void;
 }
 
-const DrawerContent = () => (
+interface DrawerContentProps {
+  selectedConversationId: string | null;
+  onConversationSelect: (id: string) => void;
+}
+
+const DrawerContent = ({ selectedConversationId, onConversationSelect }: DrawerContentProps) => (
   <div>
     <Toolbar />
-    <ConversationsList />
+    <ConversationsList
+      selectedConversationId={selectedConversationId}
+      onConversationSelect={onConversationSelect}
+    />
   </div>
 );
 
@@ -24,6 +34,8 @@ export default function Drawer({
   isClosing,
   onDrawerClose,
   onDrawerTransitionEnd,
+  selectedConversationId,
+  onConversationSelect,
 }: DrawerProps) {
   return (
     <Box
@@ -46,7 +58,10 @@ export default function Drawer({
           },
         }}
       >
-        <DrawerContent />
+        <DrawerContent
+          selectedConversationId={selectedConversationId}
+          onConversationSelect={onConversationSelect}
+        />
       </MuiDrawer>
       <MuiDrawer
         variant="permanent"
@@ -56,7 +71,10 @@ export default function Drawer({
         }}
         open
       >
-        <DrawerContent />
+        <DrawerContent
+          selectedConversationId={selectedConversationId}
+          onConversationSelect={onConversationSelect}
+        />
       </MuiDrawer>
     </Box>
   );
