@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
-import { Toolbar, Typography, Box, Paper } from '@mui/material';
-import { MessageWithSender } from '/types/database.types';
+import { Toolbar, Typography, Box } from '@mui/material';
+import { MessageWithSender } from '../types/database.types';
 import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput';
 
@@ -19,13 +19,16 @@ const MOCK_MESSAGES: MessageWithSender[] = [
     content: 'Hey! How are you doing?',
     created_at: '2025-12-15T09:30:00Z',
     updated_at: '2025-12-15T09:30:00Z',
+    deleted_at: null,
+    edited: false,
     reply_to_id: null,
     sender: {
       id: 'alice-id',
       username: 'Alice',
       avatar_url: null,
       created_at: '2025-12-01T10:00:00Z',
-      updated_at: '2025-12-01T10:00:00Z',
+      last_seen_at: '2025-12-15T09:30:00Z',
+      status: 'online',
     },
   },
   {
@@ -35,13 +38,16 @@ const MOCK_MESSAGES: MessageWithSender[] = [
     content: "I'm doing great! Just working on this new chat app. How about you?",
     created_at: '2025-12-15T09:32:00Z',
     updated_at: '2025-12-15T09:32:00Z',
+    deleted_at: null,
+    edited: false,
     reply_to_id: null,
     sender: {
       id: CURRENT_USER_ID,
       username: 'You',
       avatar_url: null,
       created_at: '2025-12-01T10:00:00Z',
-      updated_at: '2025-12-01T10:00:00Z',
+      last_seen_at: '2025-12-15T09:42:00Z',
+      status: 'online',
     },
   },
   {
@@ -51,13 +57,16 @@ const MOCK_MESSAGES: MessageWithSender[] = [
     content: 'That sounds exciting! What tech stack are you using?',
     created_at: '2025-12-15T09:33:00Z',
     updated_at: '2025-12-15T09:33:00Z',
+    deleted_at: null,
+    edited: false,
     reply_to_id: null,
     sender: {
       id: 'alice-id',
       username: 'Alice',
       avatar_url: null,
       created_at: '2025-12-01T10:00:00Z',
-      updated_at: '2025-12-01T10:00:00Z',
+      last_seen_at: '2025-12-15T09:30:00Z',
+      status: 'online',
     },
   },
   {
@@ -67,13 +76,16 @@ const MOCK_MESSAGES: MessageWithSender[] = [
     content: "React with TypeScript for the frontend, Material-UI for the component library, and Supabase for the backend. It's been a really smooth experience so far - Supabase handles auth, database, and real-time subscriptions all in one.",
     created_at: '2025-12-15T09:35:00Z',
     updated_at: '2025-12-15T09:35:00Z',
+    deleted_at: null,
+    edited: false,
     reply_to_id: null,
     sender: {
       id: CURRENT_USER_ID,
       username: 'You',
       avatar_url: null,
       created_at: '2025-12-01T10:00:00Z',
-      updated_at: '2025-12-01T10:00:00Z',
+      last_seen_at: '2025-12-15T09:42:00Z',
+      status: 'online',
     },
   },
   {
@@ -83,13 +95,16 @@ const MOCK_MESSAGES: MessageWithSender[] = [
     content: "Nice! I've heard great things about Supabase. Are you implementing real-time features?",
     created_at: '2025-12-15T09:37:00Z',
     updated_at: '2025-12-15T09:37:00Z',
+    deleted_at: null,
+    edited: false,
     reply_to_id: null,
     sender: {
       id: 'alice-id',
       username: 'Alice',
       avatar_url: null,
       created_at: '2025-12-01T10:00:00Z',
-      updated_at: '2025-12-01T10:00:00Z',
+      last_seen_at: '2025-12-15T09:30:00Z',
+      status: 'online',
     },
   },
   {
@@ -99,13 +114,16 @@ const MOCK_MESSAGES: MessageWithSender[] = [
     content: 'Yes! Planning to add real-time message updates, typing indicators, and online status. The architecture is already set up to support it.',
     created_at: '2025-12-15T09:40:00Z',
     updated_at: '2025-12-15T09:40:00Z',
+    deleted_at: null,
+    edited: false,
     reply_to_id: null,
     sender: {
       id: CURRENT_USER_ID,
       username: 'You',
       avatar_url: null,
       created_at: '2025-12-01T10:00:00Z',
-      updated_at: '2025-12-01T10:00:00Z',
+      last_seen_at: '2025-12-15T09:42:00Z',
+      status: 'online',
     },
   },
   {
@@ -115,13 +133,16 @@ const MOCK_MESSAGES: MessageWithSender[] = [
     content: 'Awesome! Let me know if you need any help testing it out when it\'s ready.',
     created_at: '2025-12-15T09:42:00Z',
     updated_at: '2025-12-15T09:42:00Z',
+    deleted_at: null,
+    edited: false,
     reply_to_id: null,
     sender: {
       id: 'alice-id',
       username: 'Alice',
       avatar_url: null,
       created_at: '2025-12-01T10:00:00Z',
-      updated_at: '2025-12-01T10:00:00Z',
+      last_seen_at: '2025-12-15T09:30:00Z',
+      status: 'online',
     },
   },
 ];
