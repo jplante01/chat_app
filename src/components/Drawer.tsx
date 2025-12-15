@@ -2,6 +2,8 @@ import Box from '@mui/material/Box';
 import MuiDrawer from '@mui/material/Drawer';
 import Toolbar from '@mui/material/Toolbar';
 import ConversationsList from './ConversationsList';
+import UserProfile from './UserProfile';
+import { Profile } from '@/types/database.types';
 
 interface DrawerProps {
   drawerWidth: number;
@@ -18,15 +20,34 @@ interface DrawerContentProps {
   onConversationSelect: (id: string) => void;
 }
 
-const DrawerContent = ({ selectedConversationId, onConversationSelect }: DrawerContentProps) => (
-  <div>
-    <Toolbar />
-    <ConversationsList
-      selectedConversationId={selectedConversationId}
-      onConversationSelect={onConversationSelect}
-    />
-  </div>
-);
+// Mock current user - in a real app this would come from auth context
+const CURRENT_USER: Profile = {
+  id: 'current-user',
+  username: 'You',
+  avatar_url: null,
+  created_at: '2025-12-01T10:00:00Z',
+  last_seen_at: '2025-12-15T09:42:00Z',
+  status: 'online',
+};
+
+const DrawerContent = ({ selectedConversationId, onConversationSelect }: DrawerContentProps) => {
+  const handleSettingsClick = () => {
+    console.log('Settings clicked');
+    // TODO: Open settings dialog/page
+  };
+
+  return (
+    <div>
+      <Toolbar sx={{ borderBottom: 1, borderColor: 'divider' }}>
+        <UserProfile profile={CURRENT_USER} onSettingsClick={handleSettingsClick} />
+      </Toolbar>
+      <ConversationsList
+        selectedConversationId={selectedConversationId}
+        onConversationSelect={onConversationSelect}
+      />
+    </div>
+  );
+};
 
 export default function Drawer({
   drawerWidth,
