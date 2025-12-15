@@ -177,7 +177,7 @@ export default function ConversationsList({
   onConversationSelect,
 }: ConversationsListProps) {
   return (
-    <List sx={{ width: '100%', bgcolor: 'background.paper', p: 0 }}>
+    <List sx={{ width: '100%', bgcolor: 'background.paper',  p: 2, pb: 0 }}>
       {MOCK_CONVERSATIONS.map((conversation) => (
         <Conversation
           key={conversation.id}

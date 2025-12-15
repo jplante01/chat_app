@@ -3,6 +3,7 @@ import MuiDrawer from '@mui/material/Drawer';
 import Toolbar from '@mui/material/Toolbar';
 import ConversationsList from './ConversationsList';
 import UserProfile from './UserProfile';
+import UserSearch from './UserSearch';
 import { Profile } from '@/types/database.types';
 
 interface DrawerProps {
@@ -36,11 +37,18 @@ const DrawerContent = ({ selectedConversationId, onConversationSelect }: DrawerC
     // TODO: Open settings dialog/page
   };
 
+  const handleUserSelect = (user: Profile) => {
+    console.log('Selected user:', user);
+    // TODO: Check if conversation exists, create if not, then select it
+    // For now, just log - real implementation will come later
+  };
+
   return (
     <div>
       <Toolbar sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <UserProfile profile={CURRENT_USER} onSettingsClick={handleSettingsClick} />
       </Toolbar>
+      <UserSearch currentUserId={CURRENT_USER.id} onUserSelect={handleUserSelect} />
       <ConversationsList
         selectedConversationId={selectedConversationId}
         onConversationSelect={onConversationSelect}
