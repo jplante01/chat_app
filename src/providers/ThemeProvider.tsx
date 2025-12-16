@@ -2,7 +2,9 @@ import { createTheme, ThemeProvider as MuiThemeProvider } from '@mui/material/st
 import CssBaseline from '@mui/material/CssBaseline';
 
 const theme = createTheme({
-  cssVariables: true,
+  cssVariables: {
+    colorSchemeSelector: 'class',
+  },
   colorSchemes: {
     light: {
       palette: {
