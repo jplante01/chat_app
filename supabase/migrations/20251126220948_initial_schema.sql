@@ -48,6 +48,12 @@ CREATE INDEX idx_messages_reply_to_id ON messages(reply_to_id) WHERE reply_to_id
 CREATE INDEX idx_conversation_participants_user_id ON conversation_participants(user_id);
 CREATE INDEX idx_conversation_participants_conversation_id ON conversation_participants(conversation_id);
 
+-- Optimized index for fetching latest message per conversation (covering index)
+-- This supports lateral joins when displaying conversation lists with message previews
+CREATE INDEX idx_messages_latest_per_conversation
+ON messages(conversation_id, created_at DESC, sender_id)
+WHERE deleted_at IS NULL;
+
 -- Function to update conversation timestamp
 CREATE OR REPLACE FUNCTION public.update_conversation_timestamp()
 RETURNS TRIGGER
