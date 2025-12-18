@@ -4,7 +4,8 @@ import Toolbar from '@mui/material/Toolbar';
 import ConversationsList from './ConversationsList';
 import UserProfile from './UserProfile';
 import UserSearch from './UserSearch';
-import { Profile } from '@/types/database.types';
+import { Profile } from '../types/database.types';
+import { useAuth } from '../contexts/AuthContext';
 
 interface DrawerProps {
   drawerWidth: number;
@@ -21,17 +22,9 @@ interface DrawerContentProps {
   onConversationSelect: (id: string) => void;
 }
 
-// Mock current user - in a real app this would come from auth context
-const CURRENT_USER: Profile = {
-  id: 'current-user',
-  username: 'You',
-  avatar_url: null,
-  created_at: '2025-12-01T10:00:00Z',
-  last_seen_at: '2025-12-15T09:42:00Z',
-  status: 'online',
-};
-
 const DrawerContent = ({ selectedConversationId, onConversationSelect }: DrawerContentProps) => {
+  const { profile } = useAuth();
+
   const handleSettingsClick = () => {
     console.log('Settings clicked');
     // TODO: Open settings dialog/page
@@ -43,12 +36,16 @@ const DrawerContent = ({ selectedConversationId, onConversationSelect }: DrawerC
     // For now, just log - real implementation will come later
   };
 
+  if (!profile) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div>
       <Toolbar sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <UserProfile profile={CURRENT_USER} onSettingsClick={handleSettingsClick} />
+        <UserProfile profile={profile} onSettingsClick={handleSettingsClick} />
       </Toolbar>
-      <UserSearch currentUserId={CURRENT_USER.id} onUserSelect={handleUserSelect} />
+      <UserSearch currentUserId={profile.id} onUserSelect={handleUserSelect} />
       <ConversationsList
         selectedConversationId={selectedConversationId}
         onConversationSelect={onConversationSelect}
