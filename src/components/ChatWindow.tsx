@@ -3,6 +3,7 @@ import { Toolbar, Typography, Box, CircularProgress } from '@mui/material';
 import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput';
 import { useMessages } from '../hooks/useMessages';
+import { useSendMessage } from '../hooks/useSendMessage';
 import { useAuth } from '../contexts/AuthContext';
 
 interface ChatWindowProps {
@@ -14,6 +15,7 @@ export default function ChatWindow({ drawerWidth, conversationId }: ChatWindowPr
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { profile } = useAuth();
   const { data: messages, isLoading, error } = useMessages(conversationId);
+  const sendMessage = useSendMessage();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -24,8 +26,13 @@ export default function ChatWindow({ drawerWidth, conversationId }: ChatWindowPr
   }, [messages]);
 
   const handleSendMessage = (content: string) => {
-    console.log('Sending message:', content);
-    // TODO: Send message to database
+    if (!conversationId || !profile?.id) return;
+
+    sendMessage.mutate({
+      conversation_id: conversationId,
+      sender_id: profile.id,
+      content,
+    });
   };
 
   // No conversation selected
@@ -140,7 +147,7 @@ export default function ChatWindow({ drawerWidth, conversationId }: ChatWindowPr
         )}
       </Box>
 
-      <MessageInput onSend={handleSendMessage} />
+      <MessageInput onSend={handleSendMessage} disabled={sendMessage.isPending} />
     </Box>
   );
 }
