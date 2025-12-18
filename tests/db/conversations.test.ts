@@ -139,4 +139,40 @@ describe('Conversations - Get For Current User', () => {
     expect(conversations).toHaveLength(1)
     expect(conversations[0].id).toBe(CONVERSATION_B_ID)
   })
+
+  it('should include latest_message when messages exist', async () => {
+    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+
+    // Create a message in Conversation A
+    const messageContent = 'Test message for latest_message field'
+    await adminSupabase.from('messages').insert({
+      conversation_id: CONVERSATION_A_ID,
+      sender_id: USER_1_ID,
+      content: messageContent,
+    })
+
+    // Fetch conversations for User1
+    const conversations = await conversationsDb.getForCurrentUser(USER_1_ID)
+
+    expect(conversations).toHaveLength(1)
+    const conversation = conversations[0]
+
+    // Verify latest_message is included
+    expect(conversation.latest_message).toBeDefined()
+    expect(conversation.latest_message?.content).toBe(messageContent)
+    expect(conversation.latest_message?.sender_id).toBe(USER_1_ID)
+
+    // Verify sender profile is included
+    expect(conversation.latest_message?.sender).toBeDefined()
+    expect(conversation.latest_message?.sender.id).toBe(USER_1_ID)
+    expect(conversation.latest_message?.sender.username).toBeDefined()
+  })
+
+  it('should have undefined latest_message when no messages exist', async () => {
+    // Conversation B has no messages yet
+    const conversations = await conversationsDb.getForCurrentUser(USER_3_ID)
+
+    expect(conversations).toHaveLength(1)
+    expect(conversations[0].latest_message).toBeUndefined()
+  })
 })
