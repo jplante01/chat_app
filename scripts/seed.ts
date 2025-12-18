@@ -13,11 +13,12 @@ const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   },
 });
 
-// Generate consistent UUIDs for this seed run
-const ALICE_ID = randomUUID();
-const BOB_ID = randomUUID();
-const CHARLIE_ID = randomUUID();
-const DIANA_ID = randomUUID();
+// Fixed UUIDs for development (same across seed runs)
+// This allows frontend to hardcode Alice's ID for testing
+const ALICE_ID = '00000000-0000-0000-0000-000000000001';
+const BOB_ID = '00000000-0000-0000-0000-000000000002';
+const CHARLIE_ID = '00000000-0000-0000-0000-000000000003';
+const DIANA_ID = '00000000-0000-0000-0000-000000000004';
 
 async function seed() {
   console.log('🌱 Starting seed process...\n');
@@ -45,6 +46,11 @@ async function seed() {
 
     console.log('🎉 Seed completed successfully!');
     console.log('\nYou can view the data at: http://127.0.0.1:54323');
+    console.log('\n📝 Test user credentials:');
+    console.log(`   Alice: alice@test.com / password123 (ID: ${ALICE_ID})`);
+    console.log(`   Bob: bob@test.com / password123 (ID: ${BOB_ID})`);
+    console.log(`   Charlie: charlie@test.com / password123 (ID: ${CHARLIE_ID})`);
+    console.log(`   Diana: diana@test.com / password123 (ID: ${DIANA_ID})`);
   } catch (error) {
     console.error('❌ Seed failed:', error);
     process.exit(1);
