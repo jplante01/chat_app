@@ -1,9 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { messagesDb } from '../db'
 import type { MessageInsert, MessageWithSender } from '../types/database.types'
+import { useNotification } from './useNotification'
 
 export function useSendMessage() {
   const queryClient = useQueryClient()
+  const { error: showError } = useNotification()
 
   return useMutation({
     mutationFn: (message: MessageInsert) => messagesDb.create(message),
@@ -61,6 +63,9 @@ export function useSendMessage() {
           context.previousMessages
         )
       }
+
+      // Show error notification to user
+      showError('Failed to send message. Please try again.')
     },
 
     onSuccess: (newMessage) => {
