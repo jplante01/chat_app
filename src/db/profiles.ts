@@ -17,4 +17,27 @@ export const profilesDb = {
     if (error) throw error;
     return data;
   },
+
+  /**
+   * Search for users by username (case-insensitive)
+   * Used for: Finding users when creating new conversations
+   * Excludes the specified user ID from results
+   */
+  search: async (query: string, excludeUserId?: string): Promise<Profile[]> => {
+    let queryBuilder = supabase
+      .from('profiles')
+      .select('*')
+      .ilike('username', `%${query}%`)
+      .order('username', { ascending: true })
+      .limit(20);
+
+    if (excludeUserId) {
+      queryBuilder = queryBuilder.neq('id', excludeUserId);
+    }
+
+    const { data, error } = await queryBuilder;
+
+    if (error) throw error;
+    return data || [];
+  },
 };

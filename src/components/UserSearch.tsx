@@ -8,66 +8,26 @@ import ListItemAvatar from '@mui/material/ListItemAvatar';
 import ListItemText from '@mui/material/ListItemText';
 import Avatar from '@mui/material/Avatar';
 import InputAdornment from '@mui/material/InputAdornment';
+import CircularProgress from '@mui/material/CircularProgress';
 import SearchIcon from '@mui/icons-material/Search';
-import { Profile } from '@/types/database.types';
+import { useQuery } from '@tanstack/react-query';
+import { profilesDb } from '../db';
+import { Profile } from '../types/database.types';
 
 interface UserSearchProps {
   currentUserId: string;
   onUserSelect: (user: Profile) => void;
 }
 
-// Mock users - in a real app this would come from a database query
-const MOCK_USERS: Profile[] = [
-  {
-    id: 'alice-id',
-    username: 'Alice',
-    avatar_url: null,
-    created_at: '2025-12-01T10:00:00Z',
-    last_seen_at: '2025-12-15T09:30:00Z',
-    status: 'online',
-  },
-  {
-    id: 'bob-id',
-    username: 'Bob',
-    avatar_url: null,
-    created_at: '2025-12-01T10:00:00Z',
-    last_seen_at: '2025-12-14T20:15:00Z',
-    status: 'offline',
-  },
-  {
-    id: 'charlie-id',
-    username: 'Charlie',
-    avatar_url: null,
-    created_at: '2025-12-01T10:00:00Z',
-    last_seen_at: '2025-12-12T14:22:00Z',
-    status: 'offline',
-  },
-  {
-    id: 'diana-id',
-    username: 'Diana',
-    avatar_url: null,
-    created_at: '2025-12-01T10:00:00Z',
-    last_seen_at: '2025-12-15T10:30:00Z',
-    status: 'online',
-  },
-  {
-    id: 'eve-id',
-    username: 'Eve',
-    avatar_url: null,
-    created_at: '2025-12-01T10:00:00Z',
-    last_seen_at: '2025-12-13T08:45:00Z',
-    status: 'offline',
-  },
-];
-
 export default function UserSearch({ currentUserId, onUserSelect }: UserSearchProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredUsers = MOCK_USERS.filter(
-    (user) =>
-      user.id !== currentUserId &&
-      user.username.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Query users from database (only when search query is not empty)
+  const { data: users = [], isLoading } = useQuery({
+    queryKey: ['users', 'search', searchQuery],
+    queryFn: () => profilesDb.search(searchQuery, currentUserId),
+    enabled: searchQuery.length > 0,
+  });
 
   const handleUserClick = (user: Profile) => {
     onUserSelect(user);
@@ -95,8 +55,14 @@ export default function UserSearch({ currentUserId, onUserSelect }: UserSearchPr
 
       {searchQuery && (
         <List sx={{ maxHeight: 300, overflow: 'auto' }}>
-          {filteredUsers.length > 0 ? (
-            filteredUsers.map((user) => (
+          {isLoading ? (
+            <ListItem>
+              <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', py: 2 }}>
+                <CircularProgress size={24} />
+              </Box>
+            </ListItem>
+          ) : users.length > 0 ? (
+            users.map((user) => (
               <ListItem key={user.id} disablePadding>
                 <ListItemButton onClick={() => handleUserClick(user)}>
                   <ListItemAvatar>

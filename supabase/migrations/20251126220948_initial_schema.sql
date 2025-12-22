@@ -91,3 +91,43 @@ $$;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+-- Function to atomically create a conversation with participants
+-- This ensures both the conversation and all participants are created in a single transaction
+CREATE OR REPLACE FUNCTION create_conversation_with_participants(participant_ids UUID[])
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  conversation_id UUID;
+  participant_id UUID;
+BEGIN
+  -- Validate input
+  IF participant_ids IS NULL OR array_length(participant_ids, 1) IS NULL THEN
+    RAISE EXCEPTION 'participant_ids cannot be null or empty';
+  END IF;
+
+  IF array_length(participant_ids, 1) < 2 THEN
+    RAISE EXCEPTION 'At least 2 participants are required';
+  END IF;
+
+  -- Insert conversation (generates UUID automatically)
+  INSERT INTO conversations DEFAULT VALUES
+  RETURNING id INTO conversation_id;
+
+  -- Insert all participants
+  FOREACH participant_id IN ARRAY participant_ids
+  LOOP
+    INSERT INTO conversation_participants (conversation_id, user_id)
+    VALUES (conversation_id, participant_id);
+  END LOOP;
+
+  -- Return the conversation ID
+  RETURN conversation_id;
+END;
+$$;
+
+-- Add comment for documentation
+COMMENT ON FUNCTION create_conversation_with_participants IS
+  'Atomically creates a conversation with the specified participants. Returns the conversation ID.';
