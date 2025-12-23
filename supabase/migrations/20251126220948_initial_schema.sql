@@ -131,3 +131,9 @@ $$;
 -- Add comment for documentation
 COMMENT ON FUNCTION create_conversation_with_participants IS
   'Atomically creates a conversation with the specified participants. Returns the conversation ID.';
+
+-- Enable Realtime for real-time updates, 
+-- Necessary to use supabase channels to monitor postgres changes 
+ALTER PUBLICATION supabase_realtime ADD TABLE messages;
+ALTER PUBLICATION supabase_realtime ADD TABLE conversations;
+ALTER PUBLICATION supabase_realtime ADD TABLE conversation_participants;
