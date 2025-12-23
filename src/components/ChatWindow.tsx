@@ -4,7 +4,9 @@ import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput';
 import { useMessages } from '../hooks/useMessages';
 import { useSendMessage } from '../hooks/useSendMessage';
+import { useSubscribeToMessages } from '../hooks/useSubscribeToMessages';
 import { useAuth } from '../contexts/AuthContext';
+import { participantsDb } from '../db';
 
 interface ChatWindowProps {
   drawerWidth: number;
@@ -17,13 +19,26 @@ export default function ChatWindow({ drawerWidth, conversationId }: ChatWindowPr
   const { data: messages, isLoading, error } = useMessages(conversationId);
   const sendMessage = useSendMessage();
 
+  // Subscribe to message updates for this conversation
+  useSubscribeToMessages(conversationId);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Mark conversation as read when user views it
+  useEffect(() => {
+    if (conversationId && profile?.id) {
+      participantsDb.markAsRead(conversationId, profile.id).catch((err) => {
+        console.error('Failed to mark conversation as read:', err);
+      });
+    }
+  }, [conversationId, profile?.id]);
 
   const handleSendMessage = (content: string) => {
     if (!conversationId || !profile?.id) return;

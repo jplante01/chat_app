@@ -4,6 +4,7 @@ import ListItemAvatar from '@mui/material/ListItemAvatar';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
 import Typography from '@mui/material/Typography';
+import Badge from '@mui/material/Badge';
 import { ConversationListItem } from '../types/database.types';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -67,16 +68,41 @@ export default function Conversation({ conversation, selected = false, onClick }
   const avatar = getConversationAvatar(conversation, profile?.id);
   const lastMessageTime = conversation.latest_message?.created_at || conversation.created_at;
 
+  // Check if conversation has unread messages
+  // Compare conversation.updated_at with current user's last_read_at
+  const currentParticipant = conversation.participants.find(p => p.user_id === profile?.id);
+  const hasUnread = currentParticipant
+    ? new Date(conversation.updated_at) > new Date(currentParticipant.last_read_at)
+    : false;
+
   return (
     <ListItem disablePadding>
       <ListItemButton selected={selected} onClick={onClick}>
         <ListItemAvatar>
-          <Avatar src={avatar.src}>
-            {avatar.initial}
-          </Avatar>
+          <Badge
+            color="primary"
+            variant="dot"
+            invisible={!hasUnread}
+            anchorOrigin={{
+              vertical: 'top',
+              horizontal: 'right',
+            }}
+          >
+            <Avatar src={avatar.src}>
+              {avatar.initial}
+            </Avatar>
+          </Badge>
         </ListItemAvatar>
         <ListItemText
-          primary={conversationName}
+          primary={
+            <Typography
+              component="span"
+              variant="body1"
+              sx={{ fontWeight: hasUnread ? 600 : 400 }}
+            >
+              {conversationName}
+            </Typography>
+          }
           secondary={
             <Typography
               component="span"
@@ -87,6 +113,7 @@ export default function Conversation({ conversation, selected = false, onClick }
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
                 display: 'block',
+                fontWeight: hasUnread ? 600 : 400,
               }}
             >
               {conversation.latest_message?.content || 'No messages yet'}

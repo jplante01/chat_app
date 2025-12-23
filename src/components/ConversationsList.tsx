@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import List from '@mui/material/List';
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
@@ -9,6 +10,7 @@ import { ConversationListItem } from '../types/database.types';
 import Conversation from './Conversation';
 import NewConversationDialog from './NewConversationDialog';
 import { useConversations } from '../hooks/useConversations';
+import { useSubscribeToConversations } from '../hooks/useSubscribeToConversations';
 import { useAuth } from '../contexts/AuthContext';
 
 interface ConversationsListProps {
@@ -23,6 +25,39 @@ export default function ConversationsList({
   const { profile } = useAuth();
   const { data: conversations, isLoading, error } = useConversations(profile?.id || null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  // Subscribe to conversation list updates
+  useSubscribeToConversations(conversations);
+
+  // Handle conversation selection with optimistic update
+  const handleConversationSelect = (conversationId: string) => {
+    // Call parent handler to update selected conversation
+    onConversationSelect(conversationId);
+
+    // Optimistically update local cache to clear unread indicator instantly
+    if (profile?.id) {
+      queryClient.setQueryData<ConversationListItem[]>(
+        ['conversations'],
+        (old) => {
+          if (!old) return old;
+
+          return old.map((conv) =>
+            conv.id === conversationId
+              ? {
+                  ...conv,
+                  participants: conv.participants.map((p) =>
+                    p.user_id === profile.id
+                      ? { ...p, last_read_at: new Date().toISOString() }
+                      : p
+                  ),
+                }
+              : conv
+          );
+        }
+      );
+    }
+  };
 
   // Loading state
   if (isLoading) {
@@ -77,7 +112,7 @@ export default function ConversationsList({
             key={conversation.id}
             conversation={conversation}
             selected={selectedConversationId === conversation.id}
-            onClick={() => onConversationSelect(conversation.id)}
+            onClick={() => handleConversationSelect(conversation.id)}
           />
         ))}
       </List>

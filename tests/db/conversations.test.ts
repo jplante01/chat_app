@@ -512,3 +512,164 @@ describe('Conversations - conversationsDb.checkExists()', () => {
     expect(conversationId).toBeNull()
   })
 })
+
+describe('Conversations - Timestamp Trigger', () => {
+  // Generate unique IDs for this test suite
+  const USER_1_ID = crypto.randomUUID()
+  const USER_2_ID = crypto.randomUUID()
+  let CONVERSATION_ID: string
+
+  const SUPABASE_URL = 'http://127.0.0.1:54321'
+  const SERVICE_ROLE_KEY = 'sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz'
+
+  beforeAll(async () => {
+    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+
+    // Create test users
+    await adminSupabase.auth.admin.createUser({
+      id: USER_1_ID,
+      email: `user1_${USER_1_ID.substring(0, 8)}@test.com`,
+      password: 'password123',
+      email_confirm: true,
+      user_metadata: { username: `user1_${USER_1_ID.substring(0, 8)}` }
+    })
+
+    await adminSupabase.auth.admin.createUser({
+      id: USER_2_ID,
+      email: `user2_${USER_2_ID.substring(0, 8)}@test.com`,
+      password: 'password123',
+      email_confirm: true,
+      user_metadata: { username: `user2_${USER_2_ID.substring(0, 8)}` }
+    })
+
+    // Create a conversation
+    const conversation = await conversationsDb.create([USER_1_ID, USER_2_ID])
+    CONVERSATION_ID = conversation.id
+  })
+
+  it('should update conversation.updated_at when new message is inserted', async () => {
+    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+
+    // Get initial updated_at
+    const { data: before } = await adminSupabase
+      .from('conversations')
+      .select('updated_at')
+      .eq('id', CONVERSATION_ID)
+      .single()
+
+    const initialUpdatedAt = before?.updated_at
+
+    // Wait a moment to ensure different timestamp
+    await new Promise(resolve => setTimeout(resolve, 100))
+
+    // Insert a message (should trigger update_conversation_timestamp)
+    await adminSupabase.from('messages').insert({
+      conversation_id: CONVERSATION_ID,
+      sender_id: USER_1_ID,
+      content: 'Test message for trigger'
+    })
+
+    // Get updated updated_at
+    const { data: after } = await adminSupabase
+      .from('conversations')
+      .select('updated_at')
+      .eq('id', CONVERSATION_ID)
+      .single()
+
+    const newUpdatedAt = after?.updated_at
+
+    // Verify updated_at was changed
+    expect(newUpdatedAt).toBeDefined()
+    expect(new Date(newUpdatedAt!).getTime()).toBeGreaterThan(
+      new Date(initialUpdatedAt!).getTime()
+    )
+  })
+
+  it('should update conversation.updated_at for each new message', async () => {
+    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+
+    // Insert first message
+    await adminSupabase.from('messages').insert({
+      conversation_id: CONVERSATION_ID,
+      sender_id: USER_1_ID,
+      content: 'First message'
+    })
+
+    const { data: after1 } = await adminSupabase
+      .from('conversations')
+      .select('updated_at')
+      .eq('id', CONVERSATION_ID)
+      .single()
+
+    const timestamp1 = after1?.updated_at
+
+    // Wait a moment
+    await new Promise(resolve => setTimeout(resolve, 100))
+
+    // Insert second message
+    await adminSupabase.from('messages').insert({
+      conversation_id: CONVERSATION_ID,
+      sender_id: USER_2_ID,
+      content: 'Second message'
+    })
+
+    const { data: after2 } = await adminSupabase
+      .from('conversations')
+      .select('updated_at')
+      .eq('id', CONVERSATION_ID)
+      .single()
+
+    const timestamp2 = after2?.updated_at
+
+    // Second timestamp should be newer
+    expect(new Date(timestamp2!).getTime()).toBeGreaterThan(
+      new Date(timestamp1!).getTime()
+    )
+  })
+
+  it('should only update the correct conversation', async () => {
+    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+
+    // Create another conversation
+    const USER_3_ID = crypto.randomUUID()
+
+    await adminSupabase.auth.admin.createUser({
+      id: USER_3_ID,
+      email: `user3_${USER_3_ID.substring(0, 8)}@test.com`,
+      password: 'password123',
+      email_confirm: true,
+      user_metadata: { username: `user3_${USER_3_ID.substring(0, 8)}` }
+    })
+
+    const conversation2 = await conversationsDb.create([USER_1_ID, USER_3_ID])
+    const CONVERSATION_2_ID = conversation2.id
+
+    // Get conversation 2's initial updated_at
+    const { data: before } = await adminSupabase
+      .from('conversations')
+      .select('updated_at')
+      .eq('id', CONVERSATION_2_ID)
+      .single()
+
+    const conversation2InitialTimestamp = before?.updated_at
+
+    // Insert message in conversation 1
+    await adminSupabase.from('messages').insert({
+      conversation_id: CONVERSATION_ID,
+      sender_id: USER_1_ID,
+      content: 'Message in conversation 1'
+    })
+
+    // Get conversation 2's updated_at after message in conversation 1
+    const { data: after } = await adminSupabase
+      .from('conversations')
+      .select('updated_at')
+      .eq('id', CONVERSATION_2_ID)
+      .single()
+
+    const conversation2AfterTimestamp = after?.updated_at
+
+    // Conversation 2's timestamp should not have changed
+    expect(conversation2AfterTimestamp).toBe(conversation2InitialTimestamp)
+  })
+})
