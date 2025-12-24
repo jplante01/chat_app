@@ -92,9 +92,29 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
+-- Helper function to check if a user is a participant in a conversation
+-- Used by RLS policies to verify access to conversation data
+CREATE OR REPLACE FUNCTION public.is_conversation_participant(conversation_id UUID, user_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.conversation_participants
+    WHERE conversation_participants.conversation_id = is_conversation_participant.conversation_id
+      AND conversation_participants.user_id = is_conversation_participant.user_id
+  );
+$$;
+
+-- Add comment for documentation
+COMMENT ON FUNCTION public.is_conversation_participant IS
+  'Check if a user is a participant in a conversation. Used by RLS policies.';
+
 -- Function to atomically create a conversation with participants
 -- This ensures both the conversation and all participants are created in a single transaction
-CREATE OR REPLACE FUNCTION create_conversation_with_participants(participant_ids UUID[])
+CREATE OR REPLACE FUNCTION public.create_conversation_with_participants(participant_ids UUID[])
 RETURNS UUID
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -112,14 +132,19 @@ BEGIN
     RAISE EXCEPTION 'At least 2 participants are required';
   END IF;
 
+  -- Security check: ensure the calling user is included in the participants list
+  IF NOT (auth.uid() = ANY(participant_ids)) THEN
+    RAISE EXCEPTION 'You must be a participant in the conversation you are creating';
+  END IF;
+
   -- Insert conversation (generates UUID automatically)
-  INSERT INTO conversations DEFAULT VALUES
+  INSERT INTO public.conversations DEFAULT VALUES
   RETURNING id INTO conversation_id;
 
   -- Insert all participants
   FOREACH participant_id IN ARRAY participant_ids
   LOOP
-    INSERT INTO conversation_participants (conversation_id, user_id)
+    INSERT INTO public.conversation_participants (conversation_id, user_id)
     VALUES (conversation_id, participant_id);
   END LOOP;
 

@@ -1,30 +1,44 @@
-import { createClient } from '@supabase/supabase-js'
-import { beforeAll, describe, expect, it } from 'vitest'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { beforeAll, afterAll, describe, expect, it } from 'vitest'
 import crypto from 'crypto'
 import { profilesDb } from '../../src/db'
 
 describe('Profile Creation', () => {
   const USER_ID = crypto.randomUUID()
   const USERNAME = `testuser_${USER_ID.substring(0, 8)}`
+  const EMAIL = `${USERNAME}@test.com`
 
   const SUPABASE_URL = 'http://127.0.0.1:54321'
-  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH'
+  const SUPABASE_ANON_KEY = 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH'
   const SERVICE_ROLE_KEY = 'sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz'
+
+  let userClient: SupabaseClient
 
   beforeAll(async () => {
     // Create admin client for setup
-    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+    const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
     // Create test user - this should trigger profile creation via handle_new_user()
-    await adminSupabase.auth.admin.createUser({
+    await adminClient.auth.admin.createUser({
       id: USER_ID,
-      email: `${USERNAME}@test.com`,
+      email: EMAIL,
       password: 'password123',
       email_confirm: true,
       user_metadata: {
         username: USERNAME
       }
     })
+
+    // Create authenticated client for this user
+    userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    await userClient.auth.signInWithPassword({
+      email: EMAIL,
+      password: 'password123',
+    })
+  })
+
+  afterAll(async () => {
+    await userClient?.auth.signOut()
   })
 
   it('should automatically create a profile when user signs up', async () => {
@@ -50,13 +64,16 @@ describe('Profiles - Search', () => {
   const USER_EXCLUDE_ID = crypto.randomUUID()
 
   const SUPABASE_URL = 'http://127.0.0.1:54321'
+  const SUPABASE_ANON_KEY = 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH'
   const SERVICE_ROLE_KEY = 'sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz'
 
+  let aliceClient: SupabaseClient
+
   beforeAll(async () => {
-    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+    const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
     // Create test users with specific usernames
-    await adminSupabase.auth.admin.createUser({
+    await adminClient.auth.admin.createUser({
       id: USER_ALICE_ID,
       email: `alice_${USER_ALICE_ID.substring(0, 8)}@test.com`,
       password: 'password123',
@@ -64,7 +81,7 @@ describe('Profiles - Search', () => {
       user_metadata: { username: 'alice_search' }
     })
 
-    await adminSupabase.auth.admin.createUser({
+    await adminClient.auth.admin.createUser({
       id: USER_BOB_ID,
       email: `bob_${USER_BOB_ID.substring(0, 8)}@test.com`,
       password: 'password123',
@@ -72,7 +89,7 @@ describe('Profiles - Search', () => {
       user_metadata: { username: 'bob_search' }
     })
 
-    await adminSupabase.auth.admin.createUser({
+    await adminClient.auth.admin.createUser({
       id: USER_CHARLIE_ID,
       email: `charlie_${USER_CHARLIE_ID.substring(0, 8)}@test.com`,
       password: 'password123',
@@ -80,7 +97,7 @@ describe('Profiles - Search', () => {
       user_metadata: { username: 'charlie_other' }
     })
 
-    await adminSupabase.auth.admin.createUser({
+    await adminClient.auth.admin.createUser({
       id: USER_DIANA_ID,
       email: `diana_${USER_DIANA_ID.substring(0, 8)}@test.com`,
       password: 'password123',
@@ -88,13 +105,24 @@ describe('Profiles - Search', () => {
       user_metadata: { username: 'SEARCH_DIANA' } // Uppercase to test case-insensitivity
     })
 
-    await adminSupabase.auth.admin.createUser({
+    await adminClient.auth.admin.createUser({
       id: USER_EXCLUDE_ID,
       email: `exclude_${USER_EXCLUDE_ID.substring(0, 8)}@test.com`,
       password: 'password123',
       email_confirm: true,
       user_metadata: { username: 'exclude_search' }
     })
+
+    // Create authenticated client as Alice (for testing search)
+    aliceClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    await aliceClient.auth.signInWithPassword({
+      email: `alice_${USER_ALICE_ID.substring(0, 8)}@test.com`,
+      password: 'password123',
+    })
+  })
+
+  afterAll(async () => {
+    await aliceClient?.auth.signOut()
   })
 
   it('should find users by username (case-insensitive)', async () => {

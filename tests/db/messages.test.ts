@@ -1,5 +1,5 @@
-import { createClient } from '@supabase/supabase-js'
-import { beforeAll, describe, expect, it } from 'vitest'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { beforeAll, afterAll, describe, expect, it } from 'vitest'
 import crypto from 'crypto'
 import { messagesDb } from '../../src/db'
 
@@ -14,13 +14,16 @@ describe('Messages - Get By Conversation', () => {
   let DELETED_MESSAGE_ID: string
 
   const SUPABASE_URL = 'http://127.0.0.1:54321'
+  const SUPABASE_ANON_KEY = 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH'
   const SERVICE_ROLE_KEY = 'sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz'
 
+  let user1Client: SupabaseClient
+
   beforeAll(async () => {
-    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+    const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
     // Create 2 test users
-    await adminSupabase.auth.admin.createUser({
+    await adminClient.auth.admin.createUser({
       id: USER_1_ID,
       email: `msguser1_${USER_1_ID.substring(0, 8)}@test.com`,
       password: 'password123',
@@ -28,7 +31,7 @@ describe('Messages - Get By Conversation', () => {
       user_metadata: { username: `msguser1_${USER_1_ID.substring(0, 8)}` }
     })
 
-    await adminSupabase.auth.admin.createUser({
+    await adminClient.auth.admin.createUser({
       id: USER_2_ID,
       email: `msguser2_${USER_2_ID.substring(0, 8)}@test.com`,
       password: 'password123',
@@ -36,8 +39,15 @@ describe('Messages - Get By Conversation', () => {
       user_metadata: { username: `msguser2_${USER_2_ID.substring(0, 8)}` }
     })
 
-    // Create conversation
-    const { data: conv } = await adminSupabase
+    // Create authenticated client for User 1
+    user1Client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    await user1Client.auth.signInWithPassword({
+      email: `msguser1_${USER_1_ID.substring(0, 8)}@test.com`,
+      password: 'password123',
+    })
+
+    // Create conversation (using admin for setup)
+    const { data: conv } = await adminClient
       .from('conversations')
       .insert({})
       .select()
@@ -45,13 +55,13 @@ describe('Messages - Get By Conversation', () => {
     CONVERSATION_ID = conv.id
 
     // Add both users as participants
-    await adminSupabase.from('conversation_participants').insert([
+    await adminClient.from('conversation_participants').insert([
       { conversation_id: CONVERSATION_ID, user_id: USER_1_ID },
       { conversation_id: CONVERSATION_ID, user_id: USER_2_ID },
     ])
 
-    // Create messages (with slight delays to ensure ordering)
-    const { data: msg1 } = await adminSupabase
+    // Create messages (using admin for setup)
+    const { data: msg1 } = await adminClient
       .from('messages')
       .insert({
         conversation_id: CONVERSATION_ID,
@@ -64,7 +74,7 @@ describe('Messages - Get By Conversation', () => {
 
     await new Promise(resolve => setTimeout(resolve, 50))
 
-    const { data: msg2 } = await adminSupabase
+    const { data: msg2 } = await adminClient
       .from('messages')
       .insert({
         conversation_id: CONVERSATION_ID,
@@ -78,7 +88,7 @@ describe('Messages - Get By Conversation', () => {
     await new Promise(resolve => setTimeout(resolve, 50))
 
     // Create a soft-deleted message
-    const { data: deletedMsg } = await adminSupabase
+    const { data: deletedMsg } = await adminClient
       .from('messages')
       .insert({
         conversation_id: CONVERSATION_ID,
@@ -89,6 +99,10 @@ describe('Messages - Get By Conversation', () => {
       .select()
       .single()
     DELETED_MESSAGE_ID = deletedMsg.id
+  })
+
+  afterAll(async () => {
+    await user1Client?.auth.signOut()
   })
 
   it('should return all non-deleted messages for the conversation', async () => {

@@ -1,5 +1,5 @@
-import { createClient } from '@supabase/supabase-js'
-import { beforeAll, describe, expect, it } from 'vitest'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { beforeAll, afterAll, describe, expect, it } from 'vitest'
 import crypto from 'crypto'
 import { conversationsDb } from '../../src/db'
 
@@ -13,13 +13,16 @@ describe('Conversations - Get For Current User', () => {
   let CONVERSATION_B_ID: string  // User2 + User3
 
   const SUPABASE_URL = 'http://127.0.0.1:54321'
+  const SUPABASE_ANON_KEY = 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH'
   const SERVICE_ROLE_KEY = 'sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz'
 
+  let user1Client: SupabaseClient
+
   beforeAll(async () => {
-    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+    const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
     // Create 3 test users
-    await adminSupabase.auth.admin.createUser({
+    await adminClient.auth.admin.createUser({
       id: USER_1_ID,
       email: `user1_${USER_1_ID.substring(0, 8)}@test.com`,
       password: 'password123',
@@ -27,7 +30,7 @@ describe('Conversations - Get For Current User', () => {
       user_metadata: { username: `user1_${USER_1_ID.substring(0, 8)}` }
     })
 
-    await adminSupabase.auth.admin.createUser({
+    await adminClient.auth.admin.createUser({
       id: USER_2_ID,
       email: `user2_${USER_2_ID.substring(0, 8)}@test.com`,
       password: 'password123',
@@ -35,7 +38,7 @@ describe('Conversations - Get For Current User', () => {
       user_metadata: { username: `user2_${USER_2_ID.substring(0, 8)}` }
     })
 
-    await adminSupabase.auth.admin.createUser({
+    await adminClient.auth.admin.createUser({
       id: USER_3_ID,
       email: `user3_${USER_3_ID.substring(0, 8)}@test.com`,
       password: 'password123',
@@ -43,15 +46,22 @@ describe('Conversations - Get For Current User', () => {
       user_metadata: { username: `user3_${USER_3_ID.substring(0, 8)}` }
     })
 
+    // Create authenticated client for User 1
+    user1Client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    await user1Client.auth.signInWithPassword({
+      email: `user1_${USER_1_ID.substring(0, 8)}@test.com`,
+      password: 'password123',
+    })
+
     // Create Conversation A (User1 + User2) - created first, so older
-    const { data: convA } = await adminSupabase
+    const { data: convA } = await adminClient
       .from('conversations')
       .insert({})
       .select()
       .single()
     CONVERSATION_A_ID = convA.id
 
-    await adminSupabase.from('conversation_participants').insert([
+    await adminClient.from('conversation_participants').insert([
       { conversation_id: CONVERSATION_A_ID, user_id: USER_1_ID },
       { conversation_id: CONVERSATION_A_ID, user_id: USER_2_ID },
     ])
@@ -60,17 +70,21 @@ describe('Conversations - Get For Current User', () => {
     await new Promise(resolve => setTimeout(resolve, 100))
 
     // Create Conversation B (User2 + User3) - created second, so newer
-    const { data: convB } = await adminSupabase
+    const { data: convB } = await adminClient
       .from('conversations')
       .insert({})
       .select()
       .single()
     CONVERSATION_B_ID = convB.id
 
-    await adminSupabase.from('conversation_participants').insert([
+    await adminClient.from('conversation_participants').insert([
       { conversation_id: CONVERSATION_B_ID, user_id: USER_2_ID },
       { conversation_id: CONVERSATION_B_ID, user_id: USER_3_ID },
     ])
+  })
+
+  afterAll(async () => {
+    await user1Client?.auth.signOut()
   })
 
   it('should return conversations for User1 (only Conversation A)', async () => {
@@ -141,11 +155,11 @@ describe('Conversations - Get For Current User', () => {
   })
 
   it('should include latest_message when messages exist', async () => {
-    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+    const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
     // Create a message in Conversation A
     const messageContent = 'Test message for latest_message field'
-    await adminSupabase.from('messages').insert({
+    await adminClient.from('messages').insert({
       conversation_id: CONVERSATION_A_ID,
       sender_id: USER_1_ID,
       content: messageContent,
@@ -184,13 +198,16 @@ describe('Conversations - Create Conversation (PostgreSQL Function)', () => {
   const USER_C_ID = crypto.randomUUID()
 
   const SUPABASE_URL = 'http://127.0.0.1:54321'
+  const SUPABASE_ANON_KEY = 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH'
   const SERVICE_ROLE_KEY = 'sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz'
 
+  let userAClient: SupabaseClient
+
   beforeAll(async () => {
-    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+    const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
     // Create test users
-    await adminSupabase.auth.admin.createUser({
+    await adminClient.auth.admin.createUser({
       id: USER_A_ID,
       email: `userA_${USER_A_ID.substring(0, 8)}@test.com`,
       password: 'password123',
@@ -198,7 +215,7 @@ describe('Conversations - Create Conversation (PostgreSQL Function)', () => {
       user_metadata: { username: `userA_${USER_A_ID.substring(0, 8)}` }
     })
 
-    await adminSupabase.auth.admin.createUser({
+    await adminClient.auth.admin.createUser({
       id: USER_B_ID,
       email: `userB_${USER_B_ID.substring(0, 8)}@test.com`,
       password: 'password123',
@@ -206,19 +223,30 @@ describe('Conversations - Create Conversation (PostgreSQL Function)', () => {
       user_metadata: { username: `userB_${USER_B_ID.substring(0, 8)}` }
     })
 
-    await adminSupabase.auth.admin.createUser({
+    await adminClient.auth.admin.createUser({
       id: USER_C_ID,
       email: `userC_${USER_C_ID.substring(0, 8)}@test.com`,
       password: 'password123',
       email_confirm: true,
       user_metadata: { username: `userC_${USER_C_ID.substring(0, 8)}` }
     })
+
+    // Create authenticated client for User A
+    userAClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    await userAClient.auth.signInWithPassword({
+      email: `userA_${USER_A_ID.substring(0, 8)}@test.com`,
+      password: 'password123',
+    })
+  })
+
+  afterAll(async () => {
+    await userAClient?.auth.signOut()
   })
 
   it('should create conversation with 2 participants using RPC', async () => {
-    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+    const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
-    const { data: conversationId, error } = await adminSupabase
+    const { data: conversationId, error } = await adminClient
       .rpc('create_conversation_with_participants', {
         participant_ids: [USER_A_ID, USER_B_ID]
       })
@@ -228,7 +256,7 @@ describe('Conversations - Create Conversation (PostgreSQL Function)', () => {
     expect(typeof conversationId).toBe('string')
 
     // Verify conversation was created
-    const { data: conversation } = await adminSupabase
+    const { data: conversation } = await adminClient
       .from('conversations')
       .select()
       .eq('id', conversationId)
@@ -238,7 +266,7 @@ describe('Conversations - Create Conversation (PostgreSQL Function)', () => {
     expect(conversation?.id).toBe(conversationId)
 
     // Verify participants were created
-    const { data: participants } = await adminSupabase
+    const { data: participants } = await adminClient
       .from('conversation_participants')
       .select()
       .eq('conversation_id', conversationId)
@@ -250,9 +278,9 @@ describe('Conversations - Create Conversation (PostgreSQL Function)', () => {
   })
 
   it('should create conversation with 3 participants (group chat) using RPC', async () => {
-    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+    const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
-    const { data: conversationId, error } = await adminSupabase
+    const { data: conversationId, error } = await adminClient
       .rpc('create_conversation_with_participants', {
         participant_ids: [USER_A_ID, USER_B_ID, USER_C_ID]
       })
@@ -261,7 +289,7 @@ describe('Conversations - Create Conversation (PostgreSQL Function)', () => {
     expect(conversationId).toBeDefined()
 
     // Verify all 3 participants were created
-    const { data: participants } = await adminSupabase
+    const { data: participants } = await adminClient
       .from('conversation_participants')
       .select()
       .eq('conversation_id', conversationId)
@@ -274,9 +302,9 @@ describe('Conversations - Create Conversation (PostgreSQL Function)', () => {
   })
 
   it('should reject null participant_ids using RPC', async () => {
-    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+    const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
-    const { error } = await adminSupabase
+    const { error } = await adminClient
       .rpc('create_conversation_with_participants', {
         participant_ids: null as any
       })
@@ -286,9 +314,9 @@ describe('Conversations - Create Conversation (PostgreSQL Function)', () => {
   })
 
   it('should reject empty participant array using RPC', async () => {
-    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+    const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
-    const { error } = await adminSupabase
+    const { error } = await adminClient
       .rpc('create_conversation_with_participants', {
         participant_ids: []
       })
@@ -298,9 +326,9 @@ describe('Conversations - Create Conversation (PostgreSQL Function)', () => {
   })
 
   it('should reject single participant using RPC', async () => {
-    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+    const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
-    const { error } = await adminSupabase
+    const { error } = await adminClient
       .rpc('create_conversation_with_participants', {
         participant_ids: [USER_A_ID]
       })
@@ -310,11 +338,11 @@ describe('Conversations - Create Conversation (PostgreSQL Function)', () => {
   })
 
   it('should be atomic - fail completely if participant insert fails', async () => {
-    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+    const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
     const INVALID_USER_ID = crypto.randomUUID()
 
     // Try to create conversation with one valid user and one invalid user
-    const { error } = await adminSupabase
+    const { error } = await adminClient
       .rpc('create_conversation_with_participants', {
         participant_ids: [USER_A_ID, INVALID_USER_ID]
       })
@@ -335,13 +363,16 @@ describe('Conversations - conversationsDb.create()', () => {
   const USER_Z_ID = crypto.randomUUID()
 
   const SUPABASE_URL = 'http://127.0.0.1:54321'
+  const SUPABASE_ANON_KEY = 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH'
   const SERVICE_ROLE_KEY = 'sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz'
 
+  let userXClient: SupabaseClient
+
   beforeAll(async () => {
-    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+    const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
     // Create test users
-    await adminSupabase.auth.admin.createUser({
+    await adminClient.auth.admin.createUser({
       id: USER_X_ID,
       email: `userX_${USER_X_ID.substring(0, 8)}@test.com`,
       password: 'password123',
@@ -349,7 +380,7 @@ describe('Conversations - conversationsDb.create()', () => {
       user_metadata: { username: `userX_${USER_X_ID.substring(0, 8)}` }
     })
 
-    await adminSupabase.auth.admin.createUser({
+    await adminClient.auth.admin.createUser({
       id: USER_Y_ID,
       email: `userY_${USER_Y_ID.substring(0, 8)}@test.com`,
       password: 'password123',
@@ -357,13 +388,24 @@ describe('Conversations - conversationsDb.create()', () => {
       user_metadata: { username: `userY_${USER_Y_ID.substring(0, 8)}` }
     })
 
-    await adminSupabase.auth.admin.createUser({
+    await adminClient.auth.admin.createUser({
       id: USER_Z_ID,
       email: `userZ_${USER_Z_ID.substring(0, 8)}@test.com`,
       password: 'password123',
       email_confirm: true,
       user_metadata: { username: `userZ_${USER_Z_ID.substring(0, 8)}` }
     })
+
+    // Create authenticated client for User X
+    userXClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    await userXClient.auth.signInWithPassword({
+      email: `userX_${USER_X_ID.substring(0, 8)}@test.com`,
+      password: 'password123',
+    })
+  })
+
+  afterAll(async () => {
+    await userXClient?.auth.signOut()
   })
 
   it('should create conversation with 2 participants', async () => {
@@ -374,8 +416,8 @@ describe('Conversations - conversationsDb.create()', () => {
     expect(typeof conversation.id).toBe('string')
 
     // Verify conversation exists in database
-    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
-    const { data: participants } = await adminSupabase
+    const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+    const { data: participants } = await adminClient
       .from('conversation_participants')
       .select()
       .eq('conversation_id', conversation.id)
@@ -392,8 +434,8 @@ describe('Conversations - conversationsDb.create()', () => {
     expect(conversation).toBeDefined()
 
     // Verify all 3 participants exist
-    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
-    const { data: participants } = await adminSupabase
+    const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+    const { data: participants } = await adminClient
       .from('conversation_participants')
       .select()
       .eq('conversation_id', conversation.id)
@@ -431,13 +473,16 @@ describe('Conversations - conversationsDb.checkExists()', () => {
   let EXISTING_CONVERSATION_ID: string
 
   const SUPABASE_URL = 'http://127.0.0.1:54321'
+  const SUPABASE_ANON_KEY = 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH'
   const SERVICE_ROLE_KEY = 'sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz'
 
+  let userPClient: SupabaseClient
+
   beforeAll(async () => {
-    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+    const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
     // Create test users
-    await adminSupabase.auth.admin.createUser({
+    await adminClient.auth.admin.createUser({
       id: USER_P_ID,
       email: `userP_${USER_P_ID.substring(0, 8)}@test.com`,
       password: 'password123',
@@ -445,7 +490,7 @@ describe('Conversations - conversationsDb.checkExists()', () => {
       user_metadata: { username: `userP_${USER_P_ID.substring(0, 8)}` }
     })
 
-    await adminSupabase.auth.admin.createUser({
+    await adminClient.auth.admin.createUser({
       id: USER_Q_ID,
       email: `userQ_${USER_Q_ID.substring(0, 8)}@test.com`,
       password: 'password123',
@@ -453,7 +498,7 @@ describe('Conversations - conversationsDb.checkExists()', () => {
       user_metadata: { username: `userQ_${USER_Q_ID.substring(0, 8)}` }
     })
 
-    await adminSupabase.auth.admin.createUser({
+    await adminClient.auth.admin.createUser({
       id: USER_R_ID,
       email: `userR_${USER_R_ID.substring(0, 8)}@test.com`,
       password: 'password123',
@@ -461,9 +506,20 @@ describe('Conversations - conversationsDb.checkExists()', () => {
       user_metadata: { username: `userR_${USER_R_ID.substring(0, 8)}` }
     })
 
+    // Create authenticated client for User P
+    userPClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    await userPClient.auth.signInWithPassword({
+      email: `userP_${USER_P_ID.substring(0, 8)}@test.com`,
+      password: 'password123',
+    })
+
     // Create an existing 1:1 conversation between P and Q
     const conversation = await conversationsDb.create([USER_P_ID, USER_Q_ID])
     EXISTING_CONVERSATION_ID = conversation.id
+  })
+
+  afterAll(async () => {
+    await userPClient?.auth.signOut()
   })
 
   it('should find existing 1:1 conversation', async () => {
@@ -486,9 +542,9 @@ describe('Conversations - conversationsDb.checkExists()', () => {
 
   it('should return null for users with no conversations at all', async () => {
     const NEW_USER_ID = crypto.randomUUID()
-    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+    const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
-    await adminSupabase.auth.admin.createUser({
+    await adminClient.auth.admin.createUser({
       id: NEW_USER_ID,
       email: `newuser_${NEW_USER_ID.substring(0, 8)}@test.com`,
       password: 'password123',
@@ -520,13 +576,16 @@ describe('Conversations - Timestamp Trigger', () => {
   let CONVERSATION_ID: string
 
   const SUPABASE_URL = 'http://127.0.0.1:54321'
+  const SUPABASE_ANON_KEY = 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH'
   const SERVICE_ROLE_KEY = 'sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz'
 
+  let user1Client: SupabaseClient
+
   beforeAll(async () => {
-    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+    const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
     // Create test users
-    await adminSupabase.auth.admin.createUser({
+    await adminClient.auth.admin.createUser({
       id: USER_1_ID,
       email: `user1_${USER_1_ID.substring(0, 8)}@test.com`,
       password: 'password123',
@@ -534,7 +593,7 @@ describe('Conversations - Timestamp Trigger', () => {
       user_metadata: { username: `user1_${USER_1_ID.substring(0, 8)}` }
     })
 
-    await adminSupabase.auth.admin.createUser({
+    await adminClient.auth.admin.createUser({
       id: USER_2_ID,
       email: `user2_${USER_2_ID.substring(0, 8)}@test.com`,
       password: 'password123',
@@ -542,16 +601,27 @@ describe('Conversations - Timestamp Trigger', () => {
       user_metadata: { username: `user2_${USER_2_ID.substring(0, 8)}` }
     })
 
+    // Create authenticated client for User 1
+    user1Client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    await user1Client.auth.signInWithPassword({
+      email: `user1_${USER_1_ID.substring(0, 8)}@test.com`,
+      password: 'password123',
+    })
+
     // Create a conversation
     const conversation = await conversationsDb.create([USER_1_ID, USER_2_ID])
     CONVERSATION_ID = conversation.id
   })
 
+  afterAll(async () => {
+    await user1Client?.auth.signOut()
+  })
+
   it('should update conversation.updated_at when new message is inserted', async () => {
-    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+    const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
     // Get initial updated_at
-    const { data: before } = await adminSupabase
+    const { data: before } = await adminClient
       .from('conversations')
       .select('updated_at')
       .eq('id', CONVERSATION_ID)
@@ -563,14 +633,14 @@ describe('Conversations - Timestamp Trigger', () => {
     await new Promise(resolve => setTimeout(resolve, 100))
 
     // Insert a message (should trigger update_conversation_timestamp)
-    await adminSupabase.from('messages').insert({
+    await adminClient.from('messages').insert({
       conversation_id: CONVERSATION_ID,
       sender_id: USER_1_ID,
       content: 'Test message for trigger'
     })
 
     // Get updated updated_at
-    const { data: after } = await adminSupabase
+    const { data: after } = await adminClient
       .from('conversations')
       .select('updated_at')
       .eq('id', CONVERSATION_ID)
@@ -586,16 +656,16 @@ describe('Conversations - Timestamp Trigger', () => {
   })
 
   it('should update conversation.updated_at for each new message', async () => {
-    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+    const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
     // Insert first message
-    await adminSupabase.from('messages').insert({
+    await adminClient.from('messages').insert({
       conversation_id: CONVERSATION_ID,
       sender_id: USER_1_ID,
       content: 'First message'
     })
 
-    const { data: after1 } = await adminSupabase
+    const { data: after1 } = await adminClient
       .from('conversations')
       .select('updated_at')
       .eq('id', CONVERSATION_ID)
@@ -607,13 +677,13 @@ describe('Conversations - Timestamp Trigger', () => {
     await new Promise(resolve => setTimeout(resolve, 100))
 
     // Insert second message
-    await adminSupabase.from('messages').insert({
+    await adminClient.from('messages').insert({
       conversation_id: CONVERSATION_ID,
       sender_id: USER_2_ID,
       content: 'Second message'
     })
 
-    const { data: after2 } = await adminSupabase
+    const { data: after2 } = await adminClient
       .from('conversations')
       .select('updated_at')
       .eq('id', CONVERSATION_ID)
@@ -628,12 +698,12 @@ describe('Conversations - Timestamp Trigger', () => {
   })
 
   it('should only update the correct conversation', async () => {
-    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+    const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
     // Create another conversation
     const USER_3_ID = crypto.randomUUID()
 
-    await adminSupabase.auth.admin.createUser({
+    await adminClient.auth.admin.createUser({
       id: USER_3_ID,
       email: `user3_${USER_3_ID.substring(0, 8)}@test.com`,
       password: 'password123',
@@ -645,7 +715,7 @@ describe('Conversations - Timestamp Trigger', () => {
     const CONVERSATION_2_ID = conversation2.id
 
     // Get conversation 2's initial updated_at
-    const { data: before } = await adminSupabase
+    const { data: before } = await adminClient
       .from('conversations')
       .select('updated_at')
       .eq('id', CONVERSATION_2_ID)
@@ -654,14 +724,14 @@ describe('Conversations - Timestamp Trigger', () => {
     const conversation2InitialTimestamp = before?.updated_at
 
     // Insert message in conversation 1
-    await adminSupabase.from('messages').insert({
+    await adminClient.from('messages').insert({
       conversation_id: CONVERSATION_ID,
       sender_id: USER_1_ID,
       content: 'Message in conversation 1'
     })
 
     // Get conversation 2's updated_at after message in conversation 1
-    const { data: after } = await adminSupabase
+    const { data: after } = await adminClient
       .from('conversations')
       .select('updated_at')
       .eq('id', CONVERSATION_2_ID)

@@ -1,5 +1,5 @@
-import { createClient } from '@supabase/supabase-js'
-import { beforeAll, describe, expect, it } from 'vitest'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { beforeAll, afterAll, describe, expect, it } from 'vitest'
 import crypto from 'crypto'
 import { messagesDb } from '../../src/db'
 
@@ -11,13 +11,16 @@ describe('Messages - Create/Send', () => {
   let CONVERSATION_ID: string
 
   const SUPABASE_URL = 'http://127.0.0.1:54321'
+  const SUPABASE_ANON_KEY = 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH'
   const SERVICE_ROLE_KEY = 'sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz'
 
+  let user1Client: SupabaseClient
+
   beforeAll(async () => {
-    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+    const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
     // Create 2 test users
-    await adminSupabase.auth.admin.createUser({
+    await adminClient.auth.admin.createUser({
       id: USER_1_ID,
       email: `senduser1_${USER_1_ID.substring(0, 8)}@test.com`,
       password: 'password123',
@@ -25,7 +28,7 @@ describe('Messages - Create/Send', () => {
       user_metadata: { username: `senduser1_${USER_1_ID.substring(0, 8)}` }
     })
 
-    await adminSupabase.auth.admin.createUser({
+    await adminClient.auth.admin.createUser({
       id: USER_2_ID,
       email: `senduser2_${USER_2_ID.substring(0, 8)}@test.com`,
       password: 'password123',
@@ -33,8 +36,15 @@ describe('Messages - Create/Send', () => {
       user_metadata: { username: `senduser2_${USER_2_ID.substring(0, 8)}` }
     })
 
-    // Create conversation
-    const { data: conv } = await adminSupabase
+    // Create authenticated client for User 1
+    user1Client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    await user1Client.auth.signInWithPassword({
+      email: `senduser1_${USER_1_ID.substring(0, 8)}@test.com`,
+      password: 'password123',
+    })
+
+    // Create conversation (using admin)
+    const { data: conv } = await adminClient
       .from('conversations')
       .insert({})
       .select()
@@ -42,10 +52,14 @@ describe('Messages - Create/Send', () => {
     CONVERSATION_ID = conv.id
 
     // Add both users as participants
-    await adminSupabase.from('conversation_participants').insert([
+    await adminClient.from('conversation_participants').insert([
       { conversation_id: CONVERSATION_ID, user_id: USER_1_ID },
       { conversation_id: CONVERSATION_ID, user_id: USER_2_ID },
     ])
+  })
+
+  afterAll(async () => {
+    await user1Client?.auth.signOut()
   })
 
   it('should create a new message successfully', async () => {

@@ -1,5 +1,5 @@
-import { createClient } from '@supabase/supabase-js'
-import { beforeAll, describe, expect, it } from 'vitest'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { beforeAll, afterAll, describe, expect, it } from 'vitest'
 import crypto from 'crypto'
 import { participantsDb, conversationsDb } from '../../src/db'
 
@@ -10,13 +10,17 @@ describe('Participants - Mark As Read', () => {
   let CONVERSATION_ID: string
 
   const SUPABASE_URL = 'http://127.0.0.1:54321'
+  const SUPABASE_ANON_KEY = 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH'
   const SERVICE_ROLE_KEY = 'sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz'
 
+  let userAClient: SupabaseClient
+  let userBClient: SupabaseClient
+
   beforeAll(async () => {
-    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+    const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
     // Create test users
-    await adminSupabase.auth.admin.createUser({
+    await adminClient.auth.admin.createUser({
       id: USER_A_ID,
       email: `userA_${USER_A_ID.substring(0, 8)}@test.com`,
       password: 'password123',
@@ -24,7 +28,7 @@ describe('Participants - Mark As Read', () => {
       user_metadata: { username: `userA_${USER_A_ID.substring(0, 8)}` }
     })
 
-    await adminSupabase.auth.admin.createUser({
+    await adminClient.auth.admin.createUser({
       id: USER_B_ID,
       email: `userB_${USER_B_ID.substring(0, 8)}@test.com`,
       password: 'password123',
@@ -32,12 +36,30 @@ describe('Participants - Mark As Read', () => {
       user_metadata: { username: `userB_${USER_B_ID.substring(0, 8)}` }
     })
 
-    // Create a conversation between User A and User B
+    // Create authenticated clients
+    userAClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    await userAClient.auth.signInWithPassword({
+      email: `userA_${USER_A_ID.substring(0, 8)}@test.com`,
+      password: 'password123',
+    })
+
+    userBClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    await userBClient.auth.signInWithPassword({
+      email: `userB_${USER_B_ID.substring(0, 8)}@test.com`,
+      password: 'password123',
+    })
+
+    // Create a conversation between User A and User B (using userAClient for RLS)
     const conversation = await conversationsDb.create([USER_A_ID, USER_B_ID])
     CONVERSATION_ID = conversation.id
 
     // Wait a moment to ensure different timestamps
     await new Promise(resolve => setTimeout(resolve, 100))
+  })
+
+  afterAll(async () => {
+    await userAClient?.auth.signOut()
+    await userBClient?.auth.signOut()
   })
 
   it('should update last_read_at when marking conversation as read', async () => {
