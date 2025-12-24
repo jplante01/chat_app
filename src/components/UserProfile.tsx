@@ -3,7 +3,7 @@ import Avatar from '@mui/material/Avatar';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { Profile } from '@/types/database.types';
+import { Profile } from '../types/database.types';
 
 interface UserProfileProps {
   profile: Profile;

@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import supabase from '../../utils/supabase'
-import type { MessageWithSender } from '../types/database.types'
 
 /**
  * Hook to subscribe to message updates for a specific conversation via Supabase Realtime

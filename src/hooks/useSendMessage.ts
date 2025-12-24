@@ -55,7 +55,7 @@ export function useSendMessage() {
       return { previousMessages }
     },
 
-    onError: (err, newMessage, context) => {
+    onError: (_err, newMessage, context) => {
       // Rollback to previous state on error
       if (context?.previousMessages) {
         queryClient.setQueryData(
