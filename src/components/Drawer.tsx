@@ -48,7 +48,7 @@ const DrawerContent = ({ selectedConversationId, onConversationSelect }: DrawerC
 export default function Drawer({
   drawerWidth,
   mobileOpen,
-  isClosing,
+  isClosing: _isClosing,
   onDrawerClose,
   onDrawerTransitionEnd,
   selectedConversationId,
