@@ -92,14 +92,39 @@ export default function ConversationsList({
   // Empty state
   if (!conversations || conversations.length === 0) {
     return (
-      <Box sx={{ p: 2, textAlign: 'center' }}>
-        <Typography color="text.secondary" variant="body2">
-          No conversations yet
-        </Typography>
-        <Typography color="text.secondary" variant="caption">
-          Search for users above to start chatting
-        </Typography>
-      </Box>
+      <>
+        <Box sx={{ p: 2, textAlign: 'center' }}>
+          <Typography color="text.secondary" variant="body2">
+            No conversations yet
+          </Typography>
+          <Typography color="text.secondary" variant="caption">
+            Click the + button to start a conversation
+          </Typography>
+        </Box>
+
+        {/* Floating Action Button */}
+        <Fab
+          color="primary"
+          aria-label="new conversation"
+          onClick={() => setDialogOpen(true)}
+          sx={{
+            position: 'absolute',
+            bottom: 16,
+            right: 16,
+          }}
+        >
+          <AddIcon />
+        </Fab>
+
+        {/* New Conversation Dialog */}
+        <NewConversationDialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          onConversationCreated={(conversationId) => {
+            onConversationSelect(conversationId);
+          }}
+        />
+      </>
     );
   }
 
