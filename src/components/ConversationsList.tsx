@@ -28,7 +28,7 @@ export default function ConversationsList({
   const queryClient = useQueryClient();
 
   // Subscribe to conversation list updates
-  useSubscribeToConversations(conversations);
+  useSubscribeToConversations(profile?.id);
 
   // Handle conversation selection with optimistic update
   const handleConversationSelect = (conversationId: string) => {

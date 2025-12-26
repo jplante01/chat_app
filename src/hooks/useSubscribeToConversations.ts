@@ -1,75 +1,51 @@
 import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import supabase from '../../utils/supabase'
-import type { ConversationListItem } from '../types/database.types'
 
 /**
  * Hook to subscribe to conversation updates via Supabase Realtime
  *
- * Creates a single channel filtered to only the user's conversations.
- * This ensures users only receive updates for their own conversations, not all
- * conversations in the database.
+ * Creates a single channel filtered to only the user's participant records.
+ * This ensures users receive updates when:
+ * - They are added to a new conversation (INSERT on conversation_participants)
+ * - Their participant data changes (UPDATE on conversation_participants, e.g., last_read_at)
+ * - A conversation they're in is updated (UPDATE on conversations, e.g., new message updates updated_at)
  *
- * Listens for changes to conversations and conversation_participants tables
- * to keep the conversation list up-to-date.
+ * By filtering on user_id instead of conversation_id, this hook catches real-time events
+ * for NEW conversations the user is added to, not just existing ones.
  *
- * Invalidates the conversations query when:
- * - Conversations are updated (e.g., new message updates updated_at)
- * - Participants are added/removed
- * - Participant data changes (e.g., last_read_at for unread indicators)
- *
- * @param conversations - The list of conversations to subscribe to
+ * @param userId - The current user's ID to subscribe to their participant events
  *
  * @example
  * ```typescript
  * function ConversationsList() {
  *   const { profile } = useAuth();
- *   const { data: conversations } = useConversations(profile?.id);
- *   useSubscribeToConversations(conversations); // Auto-updates conversation list
+ *   useSubscribeToConversations(profile?.id); // Auto-updates conversation list
  * }
  * ```
  */
-export function useSubscribeToConversations(conversations: ConversationListItem[] | undefined) {
+export function useSubscribeToConversations(userId: string | null | undefined) {
   const queryClient = useQueryClient()
 
   useEffect(() => {
-    if (!conversations || conversations.length === 0) return
+    if (!userId) return
 
-    // Extract conversation IDs to filter subscription
-    const conversationIds = conversations.map((c) => c.id)
-
-    // Create single channel filtered by user's conversation IDs
+    // Create single channel filtered by user's participant records
     const channel = supabase
-      .channel('user-conversations')
-      .on(
-        'postgres_changes',
-        {
-          event: '*', // Listen to INSERT, UPDATE, DELETE
-          schema: 'public',
-          table: 'conversations',
-          filter: `id=in.(${conversationIds.join(',')})`, // Filter by user's conversation IDs
-        },
-        (payload) => {
-          console.log('Conversation updated:', payload)
-
-          // Invalidate conversations list to refetch
-          queryClient.invalidateQueries({
-            queryKey: ['conversations'],
-          })
-        }
-      )
+      .channel(`user-conversations-${userId}`)
       .on(
         'postgres_changes',
         {
           event: '*', // Listen to INSERT, UPDATE, DELETE
           schema: 'public',
           table: 'conversation_participants',
-          filter: `conversation_id=in.(${conversationIds.join(',')})`, // Filter by user's conversation IDs
+          filter: `user_id=eq.${userId}`, // Filter by current user's ID
         },
         (payload) => {
-          console.log('Conversation participants updated:', payload)
+          console.log('User participant record changed:', payload)
 
-          // Invalidate conversations list (affects unread indicators, participant list)
+          // Invalidate conversations list to refetch
+          // This handles: new conversations, participant updates (last_read_at), removals
           queryClient.invalidateQueries({
             queryKey: ['conversations'],
           })
@@ -77,9 +53,9 @@ export function useSubscribeToConversations(conversations: ConversationListItem[
       )
       .subscribe()
 
-    // Cleanup subscription on unmount or when conversations change
+    // Cleanup subscription on unmount or when userId changes
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [conversations, queryClient])
+  }, [userId, queryClient])
 }
