@@ -1,3 +1,4 @@
+import { useState, MouseEvent } from 'react';
 import Avatar from '@mui/material/Avatar';
 import ListItem from '@mui/material/ListItem';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
@@ -5,6 +6,12 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
 import Typography from '@mui/material/Typography';
 import Badge from '@mui/material/Badge';
+import IconButton from '@mui/material/IconButton';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import DeleteIcon from '@mui/icons-material/Delete';
+import ListItemIcon from '@mui/material/ListItemIcon';
 import { ConversationListItem } from '../types/database.types';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -12,6 +19,7 @@ interface ConversationProps {
   conversation: ConversationListItem;
   selected?: boolean;
   onClick?: () => void;
+  onDelete?: (conversationId: string) => void;
 }
 
 function getConversationName(conversation: ConversationListItem, currentUserId?: string) {
@@ -62,11 +70,13 @@ function formatTimestamp(timestamp: string): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-export default function Conversation({ conversation, selected = false, onClick }: ConversationProps) {
+export default function Conversation({ conversation, selected = false, onClick, onDelete }: ConversationProps) {
   const { profile } = useAuth();
   const conversationName = getConversationName(conversation, profile?.id);
   const avatar = getConversationAvatar(conversation, profile?.id);
   const lastMessageTime = conversation.latest_message?.created_at || conversation.created_at;
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const menuOpen = Boolean(anchorEl);
 
   // Check if conversation has unread messages
   // Compare conversation.updated_at with current user's last_read_at
@@ -75,8 +85,36 @@ export default function Conversation({ conversation, selected = false, onClick }
     ? new Date(conversation.updated_at) > new Date(currentParticipant.last_read_at)
     : false;
 
+  const handleMenuClick = (event: MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleDelete = () => {
+    handleMenuClose();
+    if (onDelete) {
+      onDelete(conversation.id);
+    }
+  };
+
   return (
-    <ListItem disablePadding>
+    <ListItem
+      disablePadding
+      secondaryAction={
+        <IconButton
+          edge="end"
+          aria-label="more actions"
+          onClick={handleMenuClick}
+          size="small"
+        >
+          <MoreVertIcon />
+        </IconButton>
+      }
+    >
       <ListItemButton selected={selected} onClick={onClick}>
         <ListItemAvatar>
           <Badge
@@ -120,10 +158,32 @@ export default function Conversation({ conversation, selected = false, onClick }
             </Typography>
           }
         />
-        <Typography variant="caption" sx={{ color: 'text.secondary', ml: 1 }}>
+        <Typography variant="caption" sx={{ color: 'text.secondary', ml: 1, mr: 2 }}>
           {formatTimestamp(lastMessageTime)}
         </Typography>
       </ListItemButton>
+
+      {/* Three-dot menu */}
+      <Menu
+        anchorEl={anchorEl}
+        open={menuOpen}
+        onClose={handleMenuClose}
+        anchorOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+      >
+        <MenuItem onClick={handleDelete}>
+          <ListItemIcon>
+            <DeleteIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Delete conversation</ListItemText>
+        </MenuItem>
+      </Menu>
     </ListItem>
   );
 }

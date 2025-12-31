@@ -137,4 +137,25 @@ export const conversationsDb = {
 
     return conversation;
   },
+
+  /**
+   * Delete an entire conversation for all participants
+   * Used for: User deleting a conversation from their sidebar
+   *
+   * Uses a database function that explicitly deletes each participant record,
+   * triggering realtime DELETE events for each participant's subscription.
+   * This ensures all users see the conversation disappear immediately.
+   *
+   * The function also handles authorization (requires user to be a participant)
+   * and cleanup (deletes conversation after participants are removed).
+   */
+  deleteForUser: async (conversationId: string, userId: string): Promise<void> => {
+    // Call database function to delete conversation and notify all participants
+    const { error } = await supabase
+      .rpc('delete_conversation_and_notify', {
+        conversation_id: conversationId,
+      });
+
+    if (error) throw error;
+  },
 };

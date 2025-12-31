@@ -9,8 +9,10 @@ import AddIcon from '@mui/icons-material/Add';
 import { ConversationListItem } from '../types/database.types';
 import Conversation from './Conversation';
 import NewConversationDialog from './NewConversationDialog';
+import DeleteConversationDialog from './DeleteConversationDialog';
 import { useConversations } from '../hooks/useConversations';
 import { useSubscribeToConversations } from '../hooks/useSubscribeToConversations';
+import { useDeleteConversation } from '../hooks/useDeleteConversation';
 import { useAuth } from '../contexts/AuthContext';
 
 interface ConversationsListProps {
@@ -25,10 +27,51 @@ export default function ConversationsList({
   const { profile } = useAuth();
   const { data: conversations, isLoading, error } = useConversations(profile?.id || null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [conversationToDelete, setConversationToDelete] = useState<ConversationListItem | null>(null);
   const queryClient = useQueryClient();
+  const deleteConversation = useDeleteConversation();
 
   // Subscribe to conversation list updates
   useSubscribeToConversations(profile?.id);
+
+  // Handle delete conversation request
+  const handleDeleteRequest = (conversationId: string) => {
+    const conversation = conversations?.find(c => c.id === conversationId);
+    if (conversation) {
+      setConversationToDelete(conversation);
+      setDeleteDialogOpen(true);
+    }
+  };
+
+  // Handle confirmed delete
+  const handleDeleteConfirm = () => {
+    if (!conversationToDelete || !profile?.id) return;
+
+    deleteConversation.mutate(
+      {
+        conversationId: conversationToDelete.id,
+        userId: profile.id,
+      },
+      {
+        onSuccess: () => {
+          setDeleteDialogOpen(false);
+          setConversationToDelete(null);
+
+          // If the deleted conversation was selected, deselect it
+          if (selectedConversationId === conversationToDelete.id) {
+            onConversationSelect('');
+          }
+        },
+      }
+    );
+  };
+
+  // Handle delete dialog close
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setConversationToDelete(null);
+  };
 
   // Handle conversation selection with optimistic update
   const handleConversationSelect = (conversationId: string) => {
@@ -138,6 +181,7 @@ export default function ConversationsList({
             conversation={conversation}
             selected={selectedConversationId === conversation.id}
             onClick={() => handleConversationSelect(conversation.id)}
+            onDelete={handleDeleteRequest}
           />
         ))}
       </List>
@@ -163,6 +207,22 @@ export default function ConversationsList({
         onConversationCreated={(conversationId) => {
           onConversationSelect(conversationId);
         }}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConversationDialog
+        open={deleteDialogOpen}
+        conversationName={
+          conversationToDelete
+            ? conversationToDelete.participants
+                .filter(p => p.user_id !== profile?.id)
+                .map(p => p.profile.username)
+                .join(', ') || 'this conversation'
+            : ''
+        }
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        loading={deleteConversation.isPending}
       />
     </>
   );
