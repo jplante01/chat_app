@@ -23,7 +23,8 @@
     "@tanstack/react-query-devtools": "^5.91.1",
     "react": "latest",
     "react-dom": "latest",
-    "react-router-dom": "^7.11.0"
+    "react-router-dom": "^7.11.0",
+    "tsx": "^4.21.0"
   },
   "devDependencies": {
     "@types/react": "latest",

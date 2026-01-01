@@ -440,3 +440,231 @@ describe.skip('Subscriptions - Conversations', () => {
     )
   }, 10000)
 })
+
+/**
+ * Test realtime notifications with authenticated users
+ *
+ * This test verifies that when User A creates or deletes a conversation,
+ * User B receives realtime notifications via their authenticated subscription.
+ *
+ * This tests the actual RLS policies and realtime event broadcasting
+ * using authenticated clients (not admin/service role).
+ */
+describe('Realtime Notifications - Authenticated Users', () => {
+  const USER_A_ID = crypto.randomUUID()
+  const USER_B_ID = crypto.randomUUID()
+
+  const USER_A_EMAIL = `userA_${USER_A_ID.substring(0, 8)}@test.com`
+  const USER_B_EMAIL = `userB_${USER_B_ID.substring(0, 8)}@test.com`
+  const PASSWORD = 'password123'
+
+  const SUPABASE_URL = 'http://127.0.0.1:54321'
+  const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'
+  const SERVICE_ROLE_KEY = 'sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz'
+
+  let userAClient: ReturnType<typeof createClient>
+  let userBClient: ReturnType<typeof createClient>
+  const activeChannels: any[] = []
+
+  beforeAll(async () => {
+    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+
+    // Create test users
+    await adminSupabase.auth.admin.createUser({
+      id: USER_A_ID,
+      email: USER_A_EMAIL,
+      password: PASSWORD,
+      email_confirm: true,
+      user_metadata: { username: `userA_${USER_A_ID.substring(0, 8)}` }
+    })
+
+    await adminSupabase.auth.admin.createUser({
+      id: USER_B_ID,
+      email: USER_B_EMAIL,
+      password: PASSWORD,
+      email_confirm: true,
+      user_metadata: { username: `userB_${USER_B_ID.substring(0, 8)}` }
+    })
+
+    // Create authenticated clients for each user
+    userAClient = createClient(SUPABASE_URL, ANON_KEY)
+    userBClient = createClient(SUPABASE_URL, ANON_KEY)
+
+    // Sign in as User A
+    const { error: errorA } = await userAClient.auth.signInWithPassword({
+      email: USER_A_EMAIL,
+      password: PASSWORD,
+    })
+    if (errorA) throw errorA
+
+    // Sign in as User B
+    const { error: errorB } = await userBClient.auth.signInWithPassword({
+      email: USER_B_EMAIL,
+      password: PASSWORD,
+    })
+    if (errorB) throw errorB
+  })
+
+  afterEach(async () => {
+    // Clean up all channels after each test
+    for (const channel of activeChannels) {
+      await channel.unsubscribe()
+    }
+    activeChannels.length = 0
+  })
+
+  it('should notify User B when User A creates a conversation', async () => {
+    let receivedPayload: any = null
+    let eventReceived: Promise<void>
+
+    console.log('[Test] Setting up User B subscription...')
+
+    // User B subscribes to their own participant records
+    const subscriptionReady = new Promise<void>((resolve) => {
+      eventReceived = new Promise<void>((resolveEvent) => {
+        const channel = userBClient
+          .channel(`userB-conversations-${crypto.randomUUID()}`)
+          .on(
+            'postgres_changes',
+            {
+              event: 'INSERT',
+              schema: 'public',
+              table: 'conversation_participants',
+              filter: `user_id=eq.${USER_B_ID}`,
+            },
+            (payload) => {
+              console.log('[Test] User B received INSERT event:', payload)
+              receivedPayload = payload
+              resolveEvent()
+            }
+          )
+          .subscribe((status) => {
+            console.log('[Test] User B subscription status:', status)
+            if (status === 'SUBSCRIBED') {
+              resolve()
+            }
+          })
+
+        activeChannels.push(channel)
+      })
+    })
+
+    // Wait for subscription to be established
+    await subscriptionReady
+    console.log('[Test] User B subscription ready')
+
+    // User A creates a conversation with User B
+    console.log('[Test] User A creating conversation...')
+    const { data: conversation, error } = await userAClient
+      .rpc('create_conversation_with_participants', {
+        participant_ids: [USER_A_ID, USER_B_ID]
+      })
+
+    if (error) {
+      console.error('[Test] Error creating conversation:', error)
+      throw error
+    }
+
+    console.log('[Test] Conversation created:', conversation)
+
+    // Wait for event with timeout
+    await Promise.race([
+      eventReceived!,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Subscription timeout - User B did not receive INSERT event')), 5000)
+      )
+    ])
+
+    // Verify User B received the INSERT event
+    expect(receivedPayload).toBeDefined()
+    expect(receivedPayload.eventType).toBe('INSERT')
+    expect(receivedPayload.new.user_id).toBe(USER_B_ID)
+    expect(receivedPayload.new.conversation_id).toBe(conversation)
+
+    console.log('[Test] ✓ User B successfully received conversation creation notification')
+  }, 10000)
+
+  it('should notify User B when User A deletes a conversation', async () => {
+    // First, User A creates a conversation
+    console.log('[Test] User A creating conversation for deletion test...')
+    const { data: conversationId, error: createError } = await userAClient
+      .rpc('create_conversation_with_participants', {
+        participant_ids: [USER_A_ID, USER_B_ID]
+      })
+
+    if (createError) throw createError
+    console.log('[Test] Conversation created:', conversationId)
+
+    // Wait a bit to ensure creation is complete
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    let receivedPayload: any = null
+    let eventReceived: Promise<void>
+
+    console.log('[Test] Setting up User B subscription for DELETE events...')
+
+    // User B subscribes to DELETE events on their participant records
+    const subscriptionReady = new Promise<void>((resolve) => {
+      eventReceived = new Promise<void>((resolveEvent) => {
+        const channel = userBClient
+          .channel(`userB-deletions-${crypto.randomUUID()}`)
+          .on(
+            'postgres_changes',
+            {
+              event: 'DELETE',
+              schema: 'public',
+              table: 'conversation_participants',
+              filter: `user_id=eq.${USER_B_ID}`,
+            },
+            (payload) => {
+              console.log('[Test] User B received DELETE event:', payload)
+              receivedPayload = payload
+              resolveEvent()
+            }
+          )
+          .subscribe((status) => {
+            console.log('[Test] User B DELETE subscription status:', status)
+            if (status === 'SUBSCRIBED') {
+              resolve()
+            }
+          })
+
+        activeChannels.push(channel)
+      })
+    })
+
+    // Wait for subscription to be established
+    await subscriptionReady
+    console.log('[Test] User B DELETE subscription ready')
+
+    // User A deletes the conversation
+    console.log('[Test] User A deleting conversation...')
+    const { error: deleteError } = await userAClient
+      .rpc('delete_conversation_and_notify', {
+        conversation_id: conversationId
+      })
+
+    if (deleteError) {
+      console.error('[Test] Error deleting conversation:', deleteError)
+      throw deleteError
+    }
+
+    console.log('[Test] Conversation deleted')
+
+    // Wait for event with timeout
+    await Promise.race([
+      eventReceived!,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Subscription timeout - User B did not receive DELETE event')), 5000)
+      )
+    ])
+
+    // Verify User B received the DELETE event
+    expect(receivedPayload).toBeDefined()
+    expect(receivedPayload.eventType).toBe('DELETE')
+    expect(receivedPayload.old.user_id).toBe(USER_B_ID)
+    expect(receivedPayload.old.conversation_id).toBe(conversationId)
+
+    console.log('[Test] ✓ User B successfully received conversation deletion notification')
+  }, 15000)
+})
