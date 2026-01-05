@@ -149,7 +149,7 @@ export const conversationsDb = {
    * The function also handles authorization (requires user to be a participant)
    * and cleanup (deletes conversation after participants are removed).
    */
-  deleteForUser: async (conversationId: string, userId: string): Promise<void> => {
+  deleteForUser: async (conversationId: string, _userId: string): Promise<void> => {
     // Call database function to delete conversation and notify all participants
     const { error } = await supabase
       .rpc('delete_conversation_and_notify', {

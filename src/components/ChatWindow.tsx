@@ -4,7 +4,6 @@ import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput';
 import { useMessages } from '../hooks/useMessages';
 import { useSendMessage } from '../hooks/useSendMessage';
-import { useSubscribeToMessages } from '../hooks/useSubscribeToMessages';
 import { useAuth } from '../contexts/AuthContext';
 import { participantsDb } from '../db';
 
@@ -18,9 +17,6 @@ export default function ChatWindow({ drawerWidth, conversationId }: ChatWindowPr
   const { profile } = useAuth();
   const { data: messages, isLoading, error } = useMessages(conversationId);
   const sendMessage = useSendMessage();
-
-  // Subscribe to message updates for this conversation
-  useSubscribeToMessages(conversationId);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

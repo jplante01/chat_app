@@ -11,7 +11,6 @@ import Conversation from './Conversation';
 import NewConversationDialog from './NewConversationDialog';
 import DeleteConversationDialog from './DeleteConversationDialog';
 import { useConversations } from '../hooks/useConversations';
-import { useSubscribeToConversations } from '../hooks/useSubscribeToConversations';
 import { useDeleteConversation } from '../hooks/useDeleteConversation';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -32,8 +31,8 @@ export default function ConversationsList({
   const queryClient = useQueryClient();
   const deleteConversation = useDeleteConversation();
 
-  // Subscribe to conversation list updates
-  useSubscribeToConversations(profile?.id);
+  // NOTE: Realtime subscription is now set up in MainLayout
+  // to persist across component re-renders and prevent subscription loops
 
   // Handle delete conversation request
   const handleDeleteRequest = (conversationId: string) => {

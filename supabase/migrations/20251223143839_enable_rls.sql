@@ -45,8 +45,19 @@ CREATE POLICY "Users can view own conversations"
     public.is_conversation_participant(id, auth.uid())
   );
 
+-- Allow users to delete conversations they are participating in
+-- This enables the delete conversation feature where users can remove
+-- entire conversations (including all messages and participants)
+CREATE POLICY "Users can delete own conversations"
+  ON conversations
+  FOR DELETE
+  TO authenticated
+  USING (
+    public.is_conversation_participant(id, auth.uid())
+  );
+
 -- Note: INSERT is handled by create_conversation_with_participants() RPC (SECURITY DEFINER)
--- Note: UPDATE/DELETE not needed - conversations are immutable
+-- Note: UPDATE not needed - conversations are immutable
 
 -- =====================================================
 -- CONVERSATION_PARTICIPANTS TABLE POLICIES
@@ -124,6 +135,9 @@ COMMENT ON POLICY "Users can update own profile" ON profiles IS
 
 COMMENT ON POLICY "Users can view own conversations" ON conversations IS
   'Users can only see conversations they are participating in';
+
+COMMENT ON POLICY "Users can delete own conversations" ON conversations IS
+  'Users can delete conversations they are participating in. CASCADE will remove all participants and messages.';
 
 COMMENT ON POLICY "Users can view participants in own conversations" ON conversation_participants IS
   'Users can see all participants in conversations they are part of';

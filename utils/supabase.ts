@@ -13,7 +13,18 @@ if (!supabaseKey) {
   throw new Error('Missing Supabase anon key. Check your .env file.');
 }
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(supabaseUrl, supabaseKey, {
+  realtime: {
+    params: {
+      eventsPerSecond: 10,
+    },
+    // Increase timeout for slower connections
+    timeout: 10000,
+  },
+  auth: {
+    persistSession: true,
+  },
+});
 
 export default supabase
         
