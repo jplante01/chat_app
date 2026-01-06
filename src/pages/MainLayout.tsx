@@ -35,6 +35,14 @@ export default function MainLayout() {
     }
   };
 
+  const handleConversationSelect = (conversationId: string) => {
+    setSelectedConversationId(conversationId);
+    // Auto-close drawer on mobile when conversation is selected
+    if (mobileOpen) {
+      handleDrawerClose();
+    }
+  };
+
   return (
     <Box sx={{ display: 'flex' }}>
       <AppBar drawerWidth={drawerWidth} onDrawerToggle={handleDrawerToggle} />
@@ -45,7 +53,7 @@ export default function MainLayout() {
         onDrawerClose={handleDrawerClose}
         onDrawerTransitionEnd={handleDrawerTransitionEnd}
         selectedConversationId={selectedConversationId}
-        onConversationSelect={setSelectedConversationId}
+        onConversationSelect={handleConversationSelect}
       />
       <ChatWindow drawerWidth={drawerWidth} conversationId={selectedConversationId} />
     </Box>
