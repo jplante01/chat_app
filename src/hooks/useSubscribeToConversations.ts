@@ -93,9 +93,35 @@ export function useSubscribeToConversations(userId: string | null | undefined) {
         }
       })
 
+    // Handle page visibility changes (mobile browser backgrounding)
+    // When page becomes visible again, check channel state and reconnect if needed
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('[Realtime] Page became visible, checking channel state')
+
+        // Don't reconnect if user has logged out or channel doesn't exist
+        if (!userId || !channel) {
+          console.log('[Realtime] No userId or channel, skipping reconnection')
+          return
+        }
+
+        const channelState = channel.state
+        console.log('[Realtime] Channel state:', channelState)
+
+        // If channel is closed or errored, resubscribe
+        if (channelState === 'closed' || channelState === 'errored') {
+          console.log('[Realtime] Reconnecting channel after page visibility change')
+          channel.subscribe()
+        }
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
     // Cleanup subscription on unmount or when userId changes
     return () => {
       console.log('[Realtime] Cleaning up subscription for user:', userId)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
       supabase.removeChannel(channel)
     }
   }, [userId]) // Removed queryClient from dependencies - it's stable
