@@ -8,6 +8,10 @@ const theme = createTheme({
   colorSchemes: {
     light: {
       palette: {
+        primary: {
+          main: '#1976d2',
+          contrastText: '#121212',
+        },
         // Light mode customizations
         // Add your custom colors here if needed
       },

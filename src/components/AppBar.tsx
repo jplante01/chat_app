@@ -31,12 +31,15 @@ export default function AppBar({ drawerWidth, onDrawerToggle, hasUnreadMessages 
   return (
     <MuiAppBar
       position="fixed"
+      elevation={0}
       sx={{
         width: { sm: `calc(100% - ${drawerWidth}px)` },
         ml: { sm: `${drawerWidth}px` },
+        borderBottom: 1,
+        borderColor: 'divider',
       }}
     >
-      <Toolbar>
+      <Toolbar sx={{ bgcolor: 'background.default' }}>
         <IconButton
           color="inherit"
           aria-label="open drawer"
@@ -44,23 +47,14 @@ export default function AppBar({ drawerWidth, onDrawerToggle, hasUnreadMessages 
           onClick={onDrawerToggle}
           sx={{ mr: 2, display: { sm: 'none' } }}
         >
-          <Badge
-            color="primary"
-            variant="dot"
-            invisible={!hasUnreadMessages}
-          >
+          <Badge color="primary" variant="dot" invisible={!hasUnreadMessages}>
             <MenuIcon />
           </Badge>
         </IconButton>
 
         <Box sx={{ flexGrow: 1 }} />
         <ThemeToggle />
-        <IconButton
-          color="inherit"
-          aria-label="sign out"
-          onClick={handleSignOut}
-          sx={{ ml: 1 }}
-        >
+        <IconButton color="inherit" aria-label="sign out" onClick={handleSignOut} sx={{ ml: 1 }}>
           <LogoutIcon />
         </IconButton>
       </Toolbar>
