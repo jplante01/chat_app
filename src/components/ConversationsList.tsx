@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import List from '@mui/material/List';
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
@@ -28,7 +27,6 @@ export default function ConversationsList({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [conversationToDelete, setConversationToDelete] = useState<ConversationListItem | null>(null);
-  const queryClient = useQueryClient();
   const deleteConversation = useDeleteConversation();
 
   // NOTE: Realtime subscription is now set up in MainLayout
@@ -72,33 +70,13 @@ export default function ConversationsList({
     setConversationToDelete(null);
   };
 
-  // Handle conversation selection with optimistic update
+  // Handle conversation selection
   const handleConversationSelect = (conversationId: string) => {
     // Call parent handler to update selected conversation
     onConversationSelect(conversationId);
 
-    // Optimistically update local cache to clear unread indicator instantly
-    if (profile?.id) {
-      queryClient.setQueryData<ConversationListItem[]>(
-        ['conversations'],
-        (old) => {
-          if (!old) return old;
-
-          return old.map((conv) =>
-            conv.id === conversationId
-              ? {
-                  ...conv,
-                  participants: conv.participants.map((p) =>
-                    p.user_id === profile.id
-                      ? { ...p, last_read_at: new Date().toISOString() }
-                      : p
-                  ),
-                }
-              : conv
-          );
-        }
-      );
-    }
+    // Note: last_read_at is updated in ChatWindow when conversation is actually displayed
+    // This ensures accurate unread detection for closed conversations
   };
 
   // Loading state

@@ -27,14 +27,15 @@ export default function ChatWindow({ drawerWidth, conversationId }: ChatWindowPr
     scrollToBottom();
   }, [messages]);
 
-  // Mark conversation as read when user views it
+  // Mark conversation as read when user views it or when messages update
+  // This handles: opening conversation, new messages arriving, and user sending messages
   useEffect(() => {
     if (conversationId && profile?.id) {
       participantsDb.markAsRead(conversationId, profile.id).catch((err) => {
         console.error('Failed to mark conversation as read:', err);
       });
     }
-  }, [conversationId, profile?.id]);
+  }, [conversationId, profile?.id, messages]);
 
   const handleSendMessage = (content: string) => {
     if (!conversationId || !profile?.id) return;
