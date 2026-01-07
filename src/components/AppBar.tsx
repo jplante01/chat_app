@@ -1,6 +1,7 @@
 import MuiAppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
+import Badge from '@mui/material/Badge';
 import MenuIcon from '@mui/icons-material/Menu';
 import LogoutIcon from '@mui/icons-material/Logout';
 import Toolbar from '@mui/material/Toolbar';
@@ -11,9 +12,10 @@ import { useNavigate } from 'react-router-dom';
 interface AppBarProps {
   drawerWidth: number;
   onDrawerToggle: () => void;
+  hasUnreadMessages?: boolean;
 }
 
-export default function AppBar({ drawerWidth, onDrawerToggle }: AppBarProps) {
+export default function AppBar({ drawerWidth, onDrawerToggle, hasUnreadMessages = false }: AppBarProps) {
   const { signOut } = useAuth()
   const navigate = useNavigate()
 
@@ -42,7 +44,13 @@ export default function AppBar({ drawerWidth, onDrawerToggle }: AppBarProps) {
           onClick={onDrawerToggle}
           sx={{ mr: 2, display: { sm: 'none' } }}
         >
-          <MenuIcon />
+          <Badge
+            color="primary"
+            variant="dot"
+            invisible={!hasUnreadMessages}
+          >
+            <MenuIcon />
+          </Badge>
         </IconButton>
 
         <Box sx={{ flexGrow: 1 }} />

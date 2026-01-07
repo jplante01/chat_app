@@ -5,6 +5,7 @@ import Drawer from '../components/Drawer';
 import ChatWindow from '../components/ChatWindow';
 import { useAuth } from '../contexts/AuthContext';
 import { useSubscribeToConversations } from '../hooks/useSubscribeToConversations';
+import { useConversations } from '../hooks/useConversations';
 
 const drawerWidth = 240;
 
@@ -19,6 +20,21 @@ export default function MainLayout() {
   // Set up realtime subscription for all conversation and message updates
   // This subscription persists for the entire authenticated session
   useSubscribeToConversations(profile?.id);
+
+  // Fetch conversations to detect unread messages for AppBar badge
+  const { data: conversations } = useConversations(profile?.id || null);
+
+  // Check if there are any unread messages across all conversations
+  const hasUnreadMessages = React.useMemo(() => {
+    if (!conversations || !profile?.id) return false;
+
+    return conversations.some((conversation) => {
+      const currentParticipant = conversation.participants.find(p => p.user_id === profile.id);
+      if (!currentParticipant) return false;
+
+      return new Date(conversation.updated_at) > new Date(currentParticipant.last_read_at);
+    });
+  }, [conversations, profile?.id]);
 
   const handleDrawerClose = () => {
     setIsClosing(true);
@@ -45,7 +61,7 @@ export default function MainLayout() {
 
   return (
     <Box sx={{ display: 'flex' }}>
-      <AppBar drawerWidth={drawerWidth} onDrawerToggle={handleDrawerToggle} />
+      <AppBar drawerWidth={drawerWidth} onDrawerToggle={handleDrawerToggle} hasUnreadMessages={hasUnreadMessages} />
       <Drawer
         drawerWidth={drawerWidth}
         mobileOpen={mobileOpen}
