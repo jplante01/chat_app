@@ -39,27 +39,6 @@ export default function UserProfile({ profile, onSettingsClick }: UserProfilePro
         >
           {profile.username}
         </Typography>
-        <Typography
-          variant="caption"
-          sx={{
-            color: profile.status === 'online' ? 'success.main' : 'text.secondary',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 0.5,
-          }}
-        >
-          <Box
-            component="span"
-            sx={{
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              bgcolor: profile.status === 'online' ? 'success.main' : 'grey.400',
-              display: 'inline-block',
-            }}
-          />
-          {profile.status === 'online' ? 'Online' : 'Offline'}
-        </Typography>
       </Box>
 
       <IconButton
