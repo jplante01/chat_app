@@ -65,9 +65,18 @@ export default function Drawer({
         open={mobileOpen}
         onTransitionEnd={onDrawerTransitionEnd}
         onClose={onDrawerClose}
+        ModalProps={{
+          keepMounted: true,
+        }}
+        PaperProps={{
+          elevation: 0,
+        }}
         sx={{
           display: { xs: 'block', sm: 'none' },
-          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            width: drawerWidth,
+          },
         }}
         slotProps={{
           root: {
@@ -84,7 +93,11 @@ export default function Drawer({
         variant="permanent"
         sx={{
           display: { xs: 'none', sm: 'block' },
-          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            width: drawerWidth,
+            bgcolor: 'background.default',
+          },
         }}
         open
       >
