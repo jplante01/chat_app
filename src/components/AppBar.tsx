@@ -35,6 +35,7 @@ export default function AppBar({ drawerWidth, onDrawerToggle, hasUnreadMessages 
       sx={{
         width: { sm: `calc(100% - ${drawerWidth}px)` },
         ml: { sm: `${drawerWidth}px` },
+        bgcolor: 'background.default',
         borderBottom: 1,
         borderColor: 'divider',
       }}
