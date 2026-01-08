@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useLayoutEffect } from 'react';
 import { Toolbar, Typography, Box, CircularProgress } from '@mui/material';
 import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput';
@@ -13,18 +13,17 @@ interface ChatWindowProps {
 }
 
 export default function ChatWindow({ drawerWidth, conversationId }: ChatWindowProps) {
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const { profile } = useAuth();
   const { data: messages, isLoading, error } = useMessages(conversationId);
   const sendMessage = useSendMessage();
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  // Auto-scroll to bottom when new messages arrive
-  useEffect(() => {
-    scrollToBottom();
+  // Auto-scroll to bottom when messages change
+  // useLayoutEffect runs synchronously before browser paint, preventing visible scroll
+  useLayoutEffect(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
   // Mark conversation as read when user views it or when messages update
@@ -152,6 +151,7 @@ export default function ChatWindow({ drawerWidth, conversationId }: ChatWindowPr
       <Toolbar />
 
       <Box
+        ref={messagesContainerRef}
         sx={{
           flexGrow: 1,
           overflow: 'auto',
@@ -169,7 +169,6 @@ export default function ChatWindow({ drawerWidth, conversationId }: ChatWindowPr
                 isOwnMessage={message.sender_id === profile?.id}
               />
             ))}
-            <div ref={messagesEndRef} />
           </>
         ) : (
           <Box
