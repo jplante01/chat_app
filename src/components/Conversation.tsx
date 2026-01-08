@@ -115,7 +115,16 @@ export default function Conversation({ conversation, selected = false, onClick, 
         </IconButton>
       }
     >
-      <ListItemButton selected={selected} onClick={onClick}>
+      <ListItemButton
+        onClick={onClick}
+        sx={{
+          borderLeft: 3,
+          borderColor: selected ? 'primary.main' : 'transparent',
+          '&:hover': {
+            borderColor: selected ? 'primary.main' : 'transparent',
+          },
+        }}
+      >
         <ListItemAvatar>
           <Badge
             color="primary"
@@ -136,7 +145,10 @@ export default function Conversation({ conversation, selected = false, onClick, 
             <Typography
               component="span"
               variant="body1"
-              sx={{ fontWeight: hasUnread ? 600 : 400 }}
+              sx={{
+                fontWeight: hasUnread || selected ? 600 : 400,
+                color: selected ? 'primary.main' : 'inherit',
+              }}
             >
               {conversationName}
             </Typography>
@@ -146,19 +158,26 @@ export default function Conversation({ conversation, selected = false, onClick, 
               component="span"
               variant="body2"
               sx={{
-                color: 'text.secondary',
+                color: selected ? 'primary.main' : 'text.secondary',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
                 display: 'block',
-                fontWeight: hasUnread ? 600 : 400,
+                fontWeight: hasUnread || selected ? 600 : 400,
               }}
             >
               {conversation.latest_message?.content || 'No messages yet'}
             </Typography>
           }
         />
-        <Typography variant="caption" sx={{ color: 'text.secondary', ml: 1, mr: 2 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: selected ? 'primary.main' : 'text.secondary',
+            ml: 1,
+            mr: 2,
+          }}
+        >
           {formatTimestamp(lastMessageTime)}
         </Typography>
       </ListItemButton>
