@@ -55,14 +55,42 @@ export default function ChatWindow({ drawerWidth, conversationId }: ChatWindowPr
         sx={{
           flexGrow: 1,
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: { sm: `calc(100% - ${drawerWidth}px)` }
+          flexDirection: 'column',
+          width: { sm: `calc(100% - ${drawerWidth}px)` },
+          height: '100vh',
         }}
       >
-        <Typography color="text.secondary" variant="h6">
-          Select a conversation to start chatting
-        </Typography>
+        <Toolbar />
+        <Box
+          sx={{
+            flexGrow: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Box
+            sx={{
+              bgcolor: 'background.paper',
+              borderRadius: 2,
+              px: 8,
+              py: 4,
+              boxShadow: 1,
+            }}
+          >
+            <Typography
+              color="text.secondary"
+              variant="h5"
+              sx={{
+                fontWeight: 300,
+                textAlign: 'center',
+                letterSpacing: '0.1em',
+              }}
+            >
+              Select a conversation to start chatting
+            </Typography>
+          </Box>
+        </Box>
       </Box>
     );
   }
