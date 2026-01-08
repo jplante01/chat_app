@@ -38,6 +38,7 @@ COMMENT ON POLICY "Authenticated users can receive broadcasts" ON "realtime"."me
 CREATE OR REPLACE FUNCTION public.broadcast_conversation_participant_changes()
 RETURNS TRIGGER
 SECURITY DEFINER
+SET search_path = ''
 LANGUAGE plpgsql
 AS $$
 BEGIN
@@ -66,6 +67,7 @@ COMMENT ON FUNCTION public.broadcast_conversation_participant_changes IS
 CREATE OR REPLACE FUNCTION public.broadcast_message_changes()
 RETURNS TRIGGER
 SECURITY DEFINER
+SET search_path = ''
 LANGUAGE plpgsql
 AS $$
 DECLARE

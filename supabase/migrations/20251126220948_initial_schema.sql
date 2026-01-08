@@ -98,6 +98,7 @@ CREATE OR REPLACE FUNCTION public.is_conversation_participant(conversation_id UU
 RETURNS BOOLEAN
 LANGUAGE sql
 SECURITY DEFINER
+SET search_path = ''
 STABLE
 AS $$
   SELECT EXISTS (
