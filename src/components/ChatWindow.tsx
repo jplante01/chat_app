@@ -74,7 +74,7 @@ export default function ChatWindow({ drawerWidth, conversationId }: ChatWindowPr
               borderRadius: 2,
               px: 8,
               py: 4,
-              boxShadow: 1,
+
             }}
           >
             <Typography
