@@ -56,7 +56,7 @@ export default function ChatWindow({ drawerWidth, conversationId }: ChatWindowPr
           display: 'flex',
           flexDirection: 'column',
           width: { sm: `calc(100% - ${drawerWidth}px)` },
-          height: '100vh',
+          height: '100dvh',
         }}
       >
         <Toolbar />
@@ -145,7 +145,7 @@ export default function ChatWindow({ drawerWidth, conversationId }: ChatWindowPr
         display: 'flex',
         flexDirection: 'column',
         width: { sm: `calc(100% - ${drawerWidth}px)` },
-        height: '100vh',
+        height: '100dvh',
       }}
     >
       <Toolbar />
