@@ -39,7 +39,8 @@ export default function MessageBubble({
           sx={{
             width: 32,
             height: 32,
-            visibility: showAvatar ? 'visible' : 'hidden'
+            visibility: showAvatar ? 'visible' : 'hidden',
+            mb: 3,
           }}
         >
           {message.sender.username?.[0]?.toUpperCase() || '?'}
