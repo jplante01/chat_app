@@ -61,7 +61,14 @@ export default function Login() {
               }}
             />
           </Box>
-          <Typography variant="logoFont" sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
+          <Typography
+            variant="h4"
+            sx={{
+              fontSize: { xs: '1.5rem', sm: '2rem' },
+              fontFamily: '"Orbitron", sans-serif',
+              fontWeight: 700,
+            }}
+          >
             QuickChat
           </Typography>
         </Stack>
