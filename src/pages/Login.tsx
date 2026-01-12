@@ -11,6 +11,7 @@ import {
   Alert,
 } from '@mui/material'
 import { useAuth } from '../contexts/AuthContext'
+import QuickChatLogo from '../logo/QuickChat'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -45,10 +46,17 @@ export default function Login() {
           justifyContent: 'center',
         }}
       >
-        <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
+        <Paper elevation={0} sx={{ p: 4, width: '100%', border: 2, borderColor: 'divider' }}>
           <Typography variant="h4" component="h1" gutterBottom align="center">
-            Sign In
+            QuickChat
           </Typography>
+          <QuickChatLogo
+            sx={{
+              width: '200px',
+              height: '200px',
+              // color: theme.palette.text.primary,
+            }}
+          />
 
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
@@ -102,5 +110,5 @@ export default function Login() {
         </Paper>
       </Box>
     </Container>
-  )
+  );
 }
