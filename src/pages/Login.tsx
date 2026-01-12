@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate, Link as RouterLink } from 'react-router-dom'
+import { useState } from 'react';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
   Box,
   Container,
@@ -9,61 +9,77 @@ import {
   Paper,
   Link,
   Alert,
-} from '@mui/material'
-import { useAuth } from '../contexts/AuthContext'
-import QuickChatLogo from '../logo/QuickChat'
+  Stack,
+} from '@mui/material';
+import { useAuth } from '../contexts/AuthContext';
+import QuickChatLogo from '../logo/QuickChat';
 
 export default function Login() {
-  const navigate = useNavigate()
-  const { signIn } = useAuth()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate();
+  const { signIn } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
+    e.preventDefault();
+    setError('');
+    setLoading(true);
 
     try {
-      await signIn(email, password)
-      navigate('/')
+      await signIn(email, password);
+      navigate('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to sign in')
+      setError(err instanceof Error ? err.message : 'Failed to sign in');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <Container maxWidth="sm">
-      <Box
-        sx={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
+    <Stack sx={{ height: '100%' }}>
+      <Stack
+        direction="row"
+        alignItems="center"
+        sx={{ padding: { xs: '0.5rem', sm: '1.5rem' }, marginBottom: '2rem' }}
+        justifyContent="space-between"
       >
-        <Paper elevation={0} sx={{ p: 4, width: '100%', border: 2, borderColor: 'divider' }}>
-          <Typography variant="h4" component="h1" gutterBottom align="center">
+        <Stack direction="row" alignItems="center">
+          <Box
+            sx={{
+              width: { xs: '60px', sm: '80px' },
+              height: { xs: '60px', sm: '80px' },
+              marginRight: '0.5rem',
+            }}
+          >
+            <QuickChatLogo
+              sx={{
+                width: '100%',
+                height: '100%',
+                // color: theme.palette.text.primary,
+              }}
+            />
+          </Box>
+          <Typography variant="logoFont" sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
             QuickChat
           </Typography>
-          <QuickChatLogo
-            sx={{
-              width: '200px',
-              height: '200px',
-              // color: theme.palette.text.primary,
-            }}
-          />
-
+        </Stack>
+      </Stack>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '100%',
+            marginTop: '2rem',
+          }}
+        >
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
             </Alert>
           )}
-
           <Box component="form" onSubmit={handleSubmit} noValidate>
             <TextField
               margin="normal"
@@ -107,8 +123,7 @@ export default function Login() {
               </Typography>
             </Box>
           </Box>
-        </Paper>
-      </Box>
-    </Container>
+        </Box>
+    </Stack>
   );
 }
