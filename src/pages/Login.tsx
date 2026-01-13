@@ -80,6 +80,7 @@ export default function Login() {
             alignItems: 'center',
             height: '100%',
             marginTop: '2rem',
+            padding: '2rem',
           }}
         >
           {error && (
