@@ -35,19 +35,19 @@ echo "Building application..."
 log "Build completed successfully"
 
 echo "Uploading to S3..."
-aws s3 sync ./$BUILD_DIR s3://$S3_BUCKET_NAME --delete
+aws s3 sync $BUILD_DIR s3://$S3_BUCKET_NAME --delete
 log "S3 sync completed"
 
 echo "Setting content types..."
-aws s3 sync ./$BUILD_DIR s3://$S3_BUCKET_NAME \
+aws s3 sync $BUILD_DIR s3://$S3_BUCKET_NAME \
   --exclude "*" --include "*.html" \
   --content-type "text/html" --cache-control "no-cache"
 
-aws s3 sync ./$BUILD_DIR s3://$S3_BUCKET_NAME \
+aws s3 sync $BUILD_DIR s3://$S3_BUCKET_NAME \
   --exclude "*" --include "*.js" \
   --content-type "application/javascript" --cache-control "max-age=31536000"
 
-aws s3 sync ./$BUILD_DIR s3://$S3_BUCKET_NAME \
+aws s3 sync $BUILD_DIR s3://$S3_BUCKET_NAME \
   --exclude "*" --include "*.css" \
   --content-type "text/css" --cache-control "max-age=31536000"
 
@@ -82,7 +82,6 @@ Status: SUCCESS
 EOF
 
 echo "Deployment complete!"
-echo "S3 URL: $S3_WEBSITE_URL"
 echo "CloudFront URL: $CLOUDFRONT_URL"
 if [ -n "$INVALIDATION_ID" ]; then
   echo "Invalidation ID: $INVALIDATION_ID"
