@@ -102,10 +102,22 @@ export default function Signup() {
             height: '100%',
             marginTop: '2rem',
             padding: '2rem',
+            position: 'relative',
           }}
         >
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert
+              severity="error"
+              sx={{
+                position: 'absolute',
+                bottom: 'calc(100%)',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: 'calc(100% - 4rem)',
+                maxWidth: '400px',
+                zIndex: 10,
+              }}
+            >
               {error}
             </Alert>
           )}
