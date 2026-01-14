@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate, Link as RouterLink } from 'react-router-dom'
+import { useState } from 'react';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
   Box,
   Container,
@@ -9,66 +9,101 @@ import {
   Paper,
   Link,
   Alert,
-} from '@mui/material'
-import { useAuth } from '../contexts/AuthContext'
+  Stack,
+} from '@mui/material';
+import { useAuth } from '../contexts/AuthContext';
+import QuickChatLogo from '../logo/QuickChat';
 
 export default function Signup() {
-  const navigate = useNavigate()
-  const { signUp } = useAuth()
-  const [username, setUsername] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate();
+  const { signUp } = useAuth();
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
+    e.preventDefault();
+    setError('');
 
     // Validation
     if (password !== confirmPassword) {
-      setError('Passwords do not match')
-      return
+      setError('Passwords do not match');
+      return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters')
-      return
+      setError('Password must be at least 6 characters');
+      return;
     }
 
     if (username.length < 3) {
-      setError('Username must be at least 3 characters')
-      return
+      setError('Username must be at least 3 characters');
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
 
     try {
-      await signUp(email, password, username)
-      navigate('/')
+      await signUp(email, password, username);
+      navigate('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to sign up')
+      setError(err instanceof Error ? err.message : 'Failed to sign up');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <Container maxWidth="sm">
-      <Box
-        sx={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
+    <Stack sx={{ height: '100%' }}>
+      <Stack
+        direction="row"
+        alignItems="center"
+        sx={{ padding: { xs: '0.5rem', sm: '1.5rem' }, marginBottom: '2rem' }}
+        justifyContent="space-between"
       >
-        <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
-          <Typography variant="h4" component="h1" gutterBottom align="center">
-            Sign Up
+        <Stack direction="row" alignItems="center">
+          <Box
+            sx={{
+              width: { xs: '60px', sm: '80px' },
+              height: { xs: '60px', sm: '80px' },
+              marginRight: '0.5rem',
+            }}
+          >
+            <QuickChatLogo
+              sx={{
+                width: '100%',
+                height: '100%',
+                // color: theme.palette.text.primary,
+              }}
+            />
+          </Box>
+          <Typography
+            variant="h4"
+            sx={{
+              fontSize: { xs: '1.5rem', sm: '2rem' },
+              fontFamily: '"Orbitron", sans-serif',
+              fontWeight: 700,
+            }}
+          >
+            QuickChat
           </Typography>
+        </Stack>
+      </Stack>
 
+      <Container maxWidth="sm">
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '100%',
+            marginTop: '2rem',
+            padding: '2rem',
+          }}
+        >
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
@@ -141,8 +176,8 @@ export default function Signup() {
               </Typography>
             </Box>
           </Box>
-        </Paper>
-      </Box>
-    </Container>
-  )
+        </Box>
+      </Container>
+    </Stack>
+  );
 }
