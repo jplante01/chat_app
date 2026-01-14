@@ -38,14 +38,14 @@ export default function Login() {
   };
 
   return (
-    <Stack sx={{ height: '100%' }}>
+    <Stack direction="column" alignItems="center" sx={{ height: '100%' }}>
       <Stack
         direction="row"
         alignItems="center"
         sx={{ padding: { xs: '0.5rem', sm: '1.5rem' }, marginBottom: '2rem' }}
         justifyContent="space-between"
       >
-        <Stack direction="row" alignItems="center">
+        <Stack direction="row" alignItems="center" width="100vw">
           <Box
             sx={{
               width: { xs: '60px', sm: '80px' },
@@ -73,65 +73,78 @@ export default function Login() {
           </Typography>
         </Stack>
       </Stack>
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '100%',
-            marginTop: '2rem',
-            padding: '2rem',
-          }}
-        >
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-          <Box component="form" onSubmit={handleSubmit} noValidate>
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="email"
-              label="Email Address"
-              name="email"
-              autoComplete="email"
-              autoFocus
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Password"
-              type="password"
-              id="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-              disabled={loading}
-            >
-              {loading ? 'Signing In...' : 'Sign In'}
-            </Button>
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="body2">
-                Don't have an account?{' '}
-                <Link component={RouterLink} to="/signup">
-                  Sign Up
-                </Link>
-              </Typography>
-            </Box>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100%',
+          marginTop: '2rem',
+          padding: '2rem',
+          position: 'relative',
+        }}
+      >
+        {error && (
+          <Alert
+            severity="error"
+            sx={{
+              position: 'absolute',
+              bottom: 'calc(100%)',
+              // bottom: '0',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 'calc(100% - 4rem)',
+              maxWidth: '400px',
+              zIndex: 10,
+            }}
+          >
+            {error}
+          </Alert>
+        )}
+        <Box component="form" onSubmit={handleSubmit} noValidate>
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="email"
+            label="Email Address"
+            name="email"
+            autoComplete="email"
+            autoFocus
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            name="password"
+            label="Password"
+            type="password"
+            id="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            sx={{ mt: 3, mb: 2 }}
+            disabled={loading}
+          >
+            {loading ? 'Signing In...' : 'Sign In'}
+          </Button>
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="body2">
+              Don't have an account?{' '}
+              <Link component={RouterLink} to="/signup">
+                Sign Up
+              </Link>
+            </Typography>
           </Box>
         </Box>
+      </Box>
     </Stack>
   );
 }
