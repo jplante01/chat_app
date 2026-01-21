@@ -1,4 +1,4 @@
-import { useState, MouseEvent } from 'react';
+import { useState, MouseEvent, useMemo } from 'react';
 import Avatar from '@mui/material/Avatar';
 import ListItem from '@mui/material/ListItem';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
@@ -72,7 +72,7 @@ function formatTimestamp(timestamp: string): string {
 
 export default function Conversation({ conversation, selected = false, onClick, onDelete }: ConversationProps) {
   const { profile } = useAuth();
-  const conversationName = getConversationName(conversation, profile?.id);
+  const conversationName = useMemo(() => getConversationName(conversation, profile?.id), [conversation, profile?.id]);
   const avatar = getConversationAvatar(conversation, profile?.id);
   const lastMessageTime = conversation.latest_message?.created_at || conversation.created_at;
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
