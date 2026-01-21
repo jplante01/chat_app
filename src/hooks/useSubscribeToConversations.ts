@@ -1,6 +1,6 @@
-import { useEffect } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
-import supabase from '../../utils/supabase'
+import { useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import supabase from '../../utils/supabase';
 
 /**
  * Hook to subscribe to conversation updates via Supabase Realtime Broadcast
@@ -30,18 +30,18 @@ import supabase from '../../utils/supabase'
  * ```
  */
 export function useSubscribeToConversations(userId: string | null | undefined) {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
-  console.log('[useSubscribeToConversations] Hook called with userId:', userId)
+  console.log('[useSubscribeToConversations] Hook called with userId:', userId);
 
   useEffect(() => {
-    console.log('[useSubscribeToConversations] useEffect running, userId:', userId)
+    console.log('[useSubscribeToConversations] useEffect running, userId:', userId);
     if (!userId) {
-      console.log('[useSubscribeToConversations] No userId, skipping subscription')
-      return
+      console.log('[useSubscribeToConversations] No userId, skipping subscription');
+      return;
     }
 
-    console.log('[Realtime] Setting up broadcast subscription for user:', userId)
+    console.log('[Realtime] Setting up broadcast subscription for user:', userId);
 
     // Subscribe to user-specific broadcast topic
     // Channel name must match topic_name from broadcast_changes()
@@ -50,79 +50,87 @@ export function useSubscribeToConversations(userId: string | null | undefined) {
       .channel(`user:${userId}`, { config: { private: true } })
       .on(
         'broadcast',
-        { event: '*' },  // Listen to all events (INSERT, UPDATE, DELETE)
+        { event: '*' }, // Listen to all events (INSERT, UPDATE, DELETE)
         (payload) => {
-          console.log('[Realtime] Received broadcast event:', payload)
+          console.log('[Realtime] Received broadcast event:', payload);
 
-          const { table, event: eventType } = payload.payload || {}
+          const { table, event: eventType } = payload.payload || {};
 
           // Handle conversation participant changes (creation, deletion, updates)
           if (table === 'conversation_participants') {
-            console.log(`[Realtime] Conversation participant ${eventType}`)
-            queryClient.invalidateQueries({ queryKey: ['conversations'] })
+            console.log(`[Realtime] Conversation participant ${eventType}`);
+            queryClient.invalidateQueries({ queryKey: ['conversations'] });
           }
 
           // Handle message changes (invalidate both conversations and messages)
           else if (table === 'messages') {
-            console.log(`[Realtime] Message ${eventType}`)
-            const conversationId = payload.payload?.record?.conversation_id || payload.payload?.old_record?.conversation_id
+            console.log(`[Realtime] Message ${eventType}`);
+            const conversationId =
+              payload.payload?.record?.conversation_id ||
+              payload.payload?.old_record?.conversation_id;
 
             // Invalidate conversations list to update latest message preview
-            queryClient.invalidateQueries({ queryKey: ['conversations'] })
+            queryClient.invalidateQueries({ queryKey: ['conversations'] });
 
             // Invalidate messages for the specific conversation
             if (conversationId) {
-              queryClient.invalidateQueries({ queryKey: ['messages', conversationId] })
+              queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
             }
           }
         }
       )
       .subscribe((status, err) => {
-        console.log('[Realtime] Subscription status:', status)
+        console.log('[Realtime] Subscription status:', status);
+        
         if (err) {
-          console.error('[Realtime] Subscription error:', err)
+          console.error('[Realtime] Error details:', {
+            status,
+            error: err,
+            message: err.message,
+            stack: err.stack,
+          });
         }
-        if (status === 'SUBSCRIBED') {
-          console.log('[Realtime] ✓ Successfully subscribed to conversations broadcast')
-        }
-        if (status === 'CHANNEL_ERROR') {
-          console.error('[Realtime] Channel error - check network/CORS settings')
-        }
-        if (status === 'TIMED_OUT') {
-          console.error('[Realtime] Subscription timed out - WebSocket connection failed')
-        }
-      })
+        // if (status === 'SUBSCRIBED') {
+        //   console.log('[Realtime] ✓ Successfully subscribed to conversations broadcast')
+        // }
+        // if (status === 'CHANNEL_ERROR') {
+        //   console.error('[Realtime] Channel error - check network/CORS settings')
+        // }
+        // if (status === 'TIMED_OUT') {
+        //   console.error('[Realtime] Subscription timed out - WebSocket connection failed')
+        // }
+      });
 
     // Handle page visibility changes (mobile browser backgrounding)
     // When page becomes visible again, check channel state and reconnect if needed
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        console.log('[Realtime] Page became visible, checking channel state')
+        console.log('[Realtime] Page became visible, checking channel state');
 
         // Don't reconnect if user has logged out or channel doesn't exist
         if (!userId || !channel) {
-          console.log('[Realtime] No userId or channel, skipping reconnection')
-          return
+          console.log('[Realtime] No userId or channel, skipping reconnection');
+          return;
         }
 
-        const channelState = channel.state
-        console.log('[Realtime] Channel state:', channelState)
+        const channelState = channel.state;
+        console.log('[Realtime] Channel state:', channelState);
 
         // If channel is closed or errored, resubscribe
         if (channelState === 'closed' || channelState === 'errored') {
-          console.log('[Realtime] Reconnecting channel after page visibility change')
-          channel.subscribe()
+          console.log('[Realtime] Reconnecting channel after page visibility change');
+          channel.subscribe();
         }
       }
-    }
+    };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange)
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     // Cleanup subscription on unmount or when userId changes
     return () => {
-      console.log('[Realtime] Cleaning up subscription for user:', userId)
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-      supabase.removeChannel(channel)
-    }
-  }, [userId]) // Removed queryClient from dependencies - it's stable
+      console.log('[Realtime] Cleaning up subscription for user:', userId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      supabase.removeChannel(channel);
+    };
+  }, [userId]); // Removed queryClient from dependencies - it's stable
 }
