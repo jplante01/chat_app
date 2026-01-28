@@ -73,17 +73,19 @@ function formatTimestamp(timestamp: string): string {
 export default function Conversation({ conversation, selected = false, onClick, onDelete }: ConversationProps) {
   const { profile } = useAuth();
   const conversationName = useMemo(() => getConversationName(conversation, profile?.id), [conversation, profile?.id]);
-  const avatar = getConversationAvatar(conversation, profile?.id);
+  const avatar = useMemo(() => getConversationAvatar(conversation, profile?.id), [conversation, profile?.id]);
   const lastMessageTime = conversation.latest_message?.created_at || conversation.created_at;
+  const formattedTimestamp = useMemo(() => formatTimestamp(lastMessageTime), [lastMessageTime])
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
 
   // Check if conversation has unread messages
   // Compare conversation.updated_at with current user's last_read_at
-  const currentParticipant = conversation.participants.find(p => p.user_id === profile?.id);
-  const hasUnread = currentParticipant
-    ? new Date(conversation.updated_at) > new Date(currentParticipant.last_read_at)
-    : false;
+  const currentParticipant = useMemo(() => conversation.participants.find(p => p.user_id === profile?.id), [conversation, profile?.id]);
+  const hasUnread = useMemo(() => {                                                                                                              
+    if (!currentParticipant) return false;                                                                                                       
+    return new Date(conversation.updated_at) > new Date(currentParticipant.last_read_at);                                                        
+  }, [currentParticipant, conversation.updated_at]);  
 
   const handleMenuClick = (event: MouseEvent<HTMLElement>) => {
     event.stopPropagation();
@@ -178,7 +180,7 @@ export default function Conversation({ conversation, selected = false, onClick, 
             mr: 2,
           }}
         >
-          {formatTimestamp(lastMessageTime)}
+          {formattedTimestamp}
         </Typography>
       </ListItemButton>
 
