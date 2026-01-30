@@ -31,6 +31,7 @@
     "@types/react-dom": "latest",
     "@vitejs/plugin-react": "latest",
     "@vitest/ui": "^4.0.15",
+    "baseline-browser-mapping": "^2.9.19",
     "prettier": "^3.7.4",
     "supabase": "^2.62.5",
     "typescript": "latest",
