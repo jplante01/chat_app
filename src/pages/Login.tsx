@@ -43,18 +43,19 @@ export default function Login() {
         sx={{ padding: { xs: '0.5rem', sm: '1.5rem' }, marginBottom: '2rem' }}
         justifyContent="space-between"
       >
-        <Stack direction="row" alignItems="center" width="100vw">
+        <Stack direction="row" alignItems="center" width="100vw" sx={{paddingX: '1rem'}}>
           <Box
             sx={{
               width: { xs: '60px', sm: '80px' },
               height: { xs: '60px', sm: '80px' },
-              marginRight: '0.5rem',
+              
             }}
           >
             <QuickChatLogo
               sx={{
                 width: '100%',
                 height: '100%',
+
                 // color: theme.palette.text.primary,
               }}
             />
@@ -65,6 +66,7 @@ export default function Login() {
               fontSize: { xs: '1.5rem', sm: '2rem' },
               fontFamily: '"Orbitron", sans-serif',
               fontWeight: 700,
+              paddingX: '1rem'
             }}
           >
             QuickChat
