@@ -135,7 +135,7 @@ export default function Conversation({ conversation, selected = false, onClick, 
         onClick={onClick}
         sx={{
           paddingLeft: 2,
-          paddingRight: 0,
+          paddingRight: 2,
           borderBottom: 3,
           borderColor: selected ? 'primary.main' : 'transparent',
           '&:hover': {

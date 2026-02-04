@@ -34,7 +34,7 @@ const DrawerContent = ({ selectedConversationId, onConversationSelect }: DrawerC
 
   return (
     <div>
-      <Toolbar sx={{ borderBottom: 1, borderColor: 'divider' }}>
+      <Toolbar sx={{ borderBottom: 1, borderColor: 'divider' }} disableGutters>
         <UserProfile profile={profile} onSettingsClick={handleSettingsClick} />
       </Toolbar>
       <ConversationsList

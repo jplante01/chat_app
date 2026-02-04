@@ -14,6 +14,8 @@ export default function UserProfile({ profile, onSettingsClick }: UserProfilePro
   return (
     <Box
       sx={{
+        paddingLeft: 2,
+        paddingRight: 1,
         display: 'flex',
         alignItems: 'center',
         gap: 1.5,
