@@ -14,6 +14,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import { ConversationListItem } from '../types/database.types';
 import { useAuth } from '../contexts/AuthContext';
+import Stack from '@mui/material/Stack';
 
 interface ConversationProps {
   conversation: ConversationListItem;
@@ -106,7 +107,17 @@ export default function Conversation({ conversation, selected = false, onClick, 
   return (
     <ListItem
       disablePadding
-      secondaryAction={
+      secondaryAction={<Stack direction="column" alignItems="center">
+        <Typography
+          variant="caption"
+          sx={{
+            color: selected ? 'primary.main' : 'text.secondary',
+            ml: 1,
+            mr: 2,
+          }}
+        >
+          {formattedTimestamp}
+        </Typography>
         <IconButton
           edge="end"
           aria-label="more actions"
@@ -115,12 +126,15 @@ export default function Conversation({ conversation, selected = false, onClick, 
         >
           <MoreVertIcon />
         </IconButton>
+      </Stack>
       }
     >
       <ListItemButton
         onClick={onClick}
         sx={{
-          borderLeft: 3,
+          paddingLeft: 0,
+          paddingRight: 0,
+          borderBottom: 3,
           borderColor: selected ? 'primary.main' : 'transparent',
           '&:hover': {
             borderColor: selected ? 'primary.main' : 'transparent',
@@ -172,7 +186,7 @@ export default function Conversation({ conversation, selected = false, onClick, 
             </Typography>
           }
         />
-        <Typography
+        {/* <Typography
           variant="caption"
           sx={{
             color: selected ? 'primary.main' : 'text.secondary',
@@ -181,7 +195,7 @@ export default function Conversation({ conversation, selected = false, onClick, 
           }}
         >
           {formattedTimestamp}
-        </Typography>
+        </Typography> */}
       </ListItemButton>
 
       {/* Three-dot menu */}
