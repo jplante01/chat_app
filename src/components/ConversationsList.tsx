@@ -151,7 +151,7 @@ export default function ConversationsList({
   // Success state - render conversations
   return (
     <>
-      <List sx={{ width: '100%', bgcolor: 'background.paper', p: 2, pb: 0 }}>
+      <List sx={{ width: '100%', bgcolor: 'background.paper', p: 1, pb: 0 }}>
         {conversations.map((conversation) => (
           <Conversation
             key={conversation.id}

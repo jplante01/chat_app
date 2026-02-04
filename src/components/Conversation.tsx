@@ -107,32 +107,34 @@ export default function Conversation({ conversation, selected = false, onClick, 
   return (
     <ListItem
       disablePadding
-      secondaryAction={<Stack direction="column" alignItems="center">
-        <Typography
-          variant="caption"
-          sx={{
-            color: selected ? 'primary.main' : 'text.secondary',
-            ml: 1,
-            mr: 2,
-          }}
-        >
-          {formattedTimestamp}
-        </Typography>
+      disableGutters
+      secondaryAction={<Stack direction="column" alignItems="center" sx={{ marginRight: 0 }}>
+
         <IconButton
-          edge="end"
+          edge="start"
           aria-label="more actions"
           onClick={handleMenuClick}
           size="small"
         >
           <MoreVertIcon />
         </IconButton>
+                <Typography
+          variant="caption"
+          // sx={{
+          //   color: selected ? 'primary.main' : 'text.secondary',
+          //   ml: 1,
+          //   mr: 2,
+          // }}
+        >
+          {formattedTimestamp}
+        </Typography>
       </Stack>
       }
     >
       <ListItemButton
         onClick={onClick}
         sx={{
-          paddingLeft: 0,
+          paddingLeft: 2,
           paddingRight: 0,
           borderBottom: 3,
           borderColor: selected ? 'primary.main' : 'transparent',
