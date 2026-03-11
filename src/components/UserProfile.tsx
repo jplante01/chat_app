@@ -20,6 +20,7 @@ export default function UserProfile({ profile, onSettingsClick }: UserProfilePro
         alignItems: 'center',
         gap: 1.5,
         width: '100%',
+        minHeight: { xs: '56px', sm: '64px' },
       }}
     >
       <Avatar
