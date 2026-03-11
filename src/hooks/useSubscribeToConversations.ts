@@ -116,10 +116,12 @@ export function useSubscribeToConversations(userId: string | null | undefined) {
         const channelState = channel.state;
         console.log('[Realtime] Channel state:', channelState);
 
-        // If channel is closed or errored, resubscribe
+        // If channel is closed or errored, resubscribe and catch up on missed events
         if (channelState === 'closed' || channelState === 'errored') {
           console.log('[Realtime] Reconnecting channel after page visibility change');
           channel.subscribe();
+          queryClient.invalidateQueries({ queryKey: ['conversations'] });
+          queryClient.invalidateQueries({ queryKey: ['messages'] });
         }
       }
     };
