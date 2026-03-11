@@ -136,11 +136,11 @@ export default function Conversation({ conversation, selected = false, onClick, 
         sx={{
           paddingLeft: 2,
           paddingRight: 2,
-          borderBottom: 3,
-          borderColor: selected ? 'primary.main' : 'transparent',
-          '&:hover': {
-            borderColor: selected ? 'primary.main' : 'transparent',
-          },
+          // borderBottom: 3,
+          // borderColor: selected ? 'primary.main' : 'transparent',
+          // '&:hover': {
+          //   borderColor: selected ? 'primary.main' : 'transparent',
+          // },
         }}
       >
         <ListItemAvatar>
@@ -176,7 +176,7 @@ export default function Conversation({ conversation, selected = false, onClick, 
               component="span"
               variant="body2"
               sx={{
-                color: selected ? 'primary.main' : 'text.secondary',
+                // color: selected ? 'primary.main' : 'text.secondary',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
