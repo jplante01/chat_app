@@ -15,8 +15,6 @@ export default function MainLayout() {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [isClosing, setIsClosing] = React.useState(false);
 
-  console.log('[MainLayout] Rendering, profile:', profile?.id);
-
   // Set up realtime subscription for all conversation and message updates
   // This subscription persists for the entire authenticated session
   useSubscribeToConversations(profile?.id);
