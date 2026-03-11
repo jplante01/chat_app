@@ -120,11 +120,11 @@ export default function Conversation({ conversation, selected = false, onClick, 
         </IconButton>
                 <Typography
           variant="caption"
-          // sx={{
-          //   color: selected ? 'primary.main' : 'text.secondary',
-          //   ml: 1,
-          //   mr: 2,
-          // }}
+          sx={{
+            // color: selected ? 'primary.main' : 'text.secondary',
+            ml: 1,
+            mr: 1,
+          }}
         >
           {formattedTimestamp}
         </Typography>
