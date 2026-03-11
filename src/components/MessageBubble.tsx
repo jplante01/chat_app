@@ -37,8 +37,8 @@ export default function MessageBubble({
         <Avatar
           src={message.sender.avatar_url || undefined}
           sx={{
-            width: 32,
-            height: 32,
+            width: { xs: 32, sm: 40 },
+            height: { xs: 32, sm: 40 },
             visibility: showAvatar ? 'visible' : 'hidden',
             mb: 3,
           }}
