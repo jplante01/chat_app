@@ -2,12 +2,9 @@ import MuiAppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Badge from '@mui/material/Badge';
-import { IconMenu2, IconLogout } from '@tabler/icons-react';
+import { IconMenu2 } from '@tabler/icons-react';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
-import { ThemeToggle } from './common/ThemeToggle';
-import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
 
 interface AppBarProps {
   drawerWidth: number;
@@ -16,18 +13,6 @@ interface AppBarProps {
 }
 
 export default function AppBar({ drawerWidth, onDrawerToggle, hasUnreadMessages = false }: AppBarProps) {
-  const { signOut } = useAuth()
-  const navigate = useNavigate()
-
-  const handleSignOut = async () => {
-    try {
-      await signOut()
-      navigate('/login')
-    } catch (error) {
-      console.error('Error signing out:', error)
-    }
-  }
-
   return (
     <MuiAppBar
       position="fixed"
@@ -67,16 +52,6 @@ export default function AppBar({ drawerWidth, onDrawerToggle, hasUnreadMessages 
         </Typography>
 
         <Box sx={{ flexGrow: 1 }} />
-        <ThemeToggle />
-        <IconButton
-          color="inherit"
-          aria-label="sign out"
-          onClick={handleSignOut}
-          sx={{ ml: 1 }}
-          size="small"
-        >
-          <IconLogout size={18} />
-        </IconButton>
       </Toolbar>
     </MuiAppBar>
   );

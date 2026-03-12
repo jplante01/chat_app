@@ -3,11 +3,8 @@ import List from '@mui/material/List';
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Fab from '@mui/material/Fab';
-import { IconPlus } from '@tabler/icons-react';
 import { ConversationListItem } from '../types/database.types';
 import Conversation from './Conversation';
-import NewConversationDialog from './NewConversationDialog';
 import DeleteConversationDialog from './DeleteConversationDialog';
 import { useConversations } from '../hooks/useConversations';
 import { useDeleteConversation } from '../hooks/useDeleteConversation';
@@ -24,7 +21,6 @@ export default function ConversationsList({
 }: ConversationsListProps) {
   const { profile } = useAuth();
   const { data: conversations, isLoading, error } = useConversations(profile?.id || null);
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [conversationToDelete, setConversationToDelete] = useState<ConversationListItem | null>(null);
   const deleteConversation = useDeleteConversation();
@@ -59,29 +55,6 @@ export default function ConversationsList({
     setConversationToDelete(null);
   };
 
-  const handleConversationSelect = (conversationId: string) => {
-    onConversationSelect(conversationId);
-  };
-
-  const fab = (
-    <Fab
-      color="primary"
-      aria-label="new conversation"
-      onClick={() => setDialogOpen(true)}
-      size="small"
-      sx={{
-        position: 'absolute',
-        bottom: 16,
-        right: 16,
-        bgcolor: 'primary.main',
-        color: 'primary.contrastText',
-        '&:hover': { bgcolor: 'secondary.main' },
-      }}
-    >
-      <IconPlus size={18} />
-    </Fab>
-  );
-
   if (isLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 4 }}>
@@ -102,46 +75,30 @@ export default function ConversationsList({
 
   if (!conversations || conversations.length === 0) {
     return (
-      <>
-        <Box sx={{ p: 2, textAlign: 'center' }}>
-          <Typography sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>
-            no conversations yet
-          </Typography>
-          <Typography sx={{ color: 'text.secondary', fontSize: '0.65rem', opacity: 0.6, mt: 0.5 }}>
-            press + to start one
-          </Typography>
-        </Box>
-        {fab}
-        <NewConversationDialog
-          open={dialogOpen}
-          onClose={() => setDialogOpen(false)}
-          onConversationCreated={(conversationId) => onConversationSelect(conversationId)}
-        />
-      </>
+      <Box sx={{ p: 2, textAlign: 'center' }}>
+        <Typography sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>
+          no conversations yet
+        </Typography>
+        <Typography sx={{ color: 'text.secondary', fontSize: '0.65rem', opacity: 0.6, mt: 0.5 }}>
+          press + to start one
+        </Typography>
+      </Box>
     );
   }
 
   return (
     <>
-      <List sx={{ width: '100%', p: 0, pb: 8 }}>
+      <List sx={{ width: '100%', p: 0 }}>
         {conversations.map((conversation) => (
           <Conversation
             key={conversation.id}
             conversation={conversation}
             selected={selectedConversationId === conversation.id}
-            onClick={() => handleConversationSelect(conversation.id)}
+            onClick={() => onConversationSelect(conversation.id)}
             onDelete={handleDeleteRequest}
           />
         ))}
       </List>
-
-      {fab}
-
-      <NewConversationDialog
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        onConversationCreated={(conversationId) => onConversationSelect(conversationId)}
-      />
 
       <DeleteConversationDialog
         open={deleteDialogOpen}

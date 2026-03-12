@@ -16,7 +16,6 @@
   "dependencies": {
     "@emotion/react": "latest",
     "@emotion/styled": "latest",
-    "@mui/icons-material": "latest",
     "@mui/material": "latest",
     "@supabase/supabase-js": "^2.86.0",
     "@tabler/icons-react": "^3.40.0",

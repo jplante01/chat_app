@@ -70,9 +70,12 @@ export default function UserProfile({ profile, onSettingsClick }: UserProfilePro
       <IconButton
         size="small"
         onClick={onSettingsClick}
-        sx={{ color: 'text.secondary' }}
+        sx={{
+          color: 'text.secondary',
+          '& svg': { width: { xs: 16, sm: 28 }, height: { xs: 16, sm: 28 } },
+        }}
       >
-        <IconSettings size={16} />
+        <IconSettings size={28} />
       </IconButton>
     </Box>
   );

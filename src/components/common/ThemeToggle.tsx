@@ -14,8 +14,14 @@ export function ThemeToggle() {
   }
 
   return (
-    <IconButton onClick={toggleTheme} color="inherit" aria-label="toggle theme" size="small">
-      {mode === 'dark' ? <IconSun size={18} /> : <IconMoon size={18} />}
+    <IconButton
+      onClick={toggleTheme}
+      color="inherit"
+      aria-label="toggle theme"
+      size="small"
+      sx={{ '& svg': { width: { xs: 24, sm: 28 }, height: { xs: 24, sm: 28 } } }}
+    >
+      {mode === 'dark' ? <IconSun size={28} /> : <IconMoon size={28} />}
     </IconButton>
   );
 }
