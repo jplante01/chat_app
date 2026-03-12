@@ -1,9 +1,15 @@
+import { useState } from 'react';
 import Box from '@mui/material/Box';
 import MuiDrawer from '@mui/material/Drawer';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
+import { IconLogout, IconPlus } from '@tabler/icons-react';
+import { useNavigate } from 'react-router-dom';
 import ConversationsList from './ConversationsList';
 import UserProfile from './UserProfile';
+import NewConversationDialog from './NewConversationDialog';
+import { ThemeToggle } from './common/ThemeToggle';
 import { useAuth } from '../contexts/AuthContext';
 
 interface DrawerProps {
@@ -29,10 +35,21 @@ const drawerSx = {
 };
 
 const DrawerContent = ({ selectedConversationId, onConversationSelect }: DrawerContentProps) => {
-  const { profile } = useAuth();
+  const { profile, signOut } = useAuth();
+  const navigate = useNavigate();
+  const [newConvOpen, setNewConvOpen] = useState(false);
 
   const handleSettingsClick = () => {
     console.log('Settings clicked');
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/login');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   if (!profile) {
@@ -46,7 +63,7 @@ const DrawerContent = ({ selectedConversationId, onConversationSelect }: DrawerC
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>
       <Toolbar
         sx={{
           borderBottom: '1px dashed',
@@ -57,12 +74,70 @@ const DrawerContent = ({ selectedConversationId, onConversationSelect }: DrawerC
       >
         <UserProfile profile={profile} onSettingsClick={handleSettingsClick} />
       </Toolbar>
-      <Box sx={{ flexGrow: 1, overflow: 'hidden', position: 'relative' }}>
+
+      <Box sx={{ flexGrow: 1, overflow: 'hidden', pb: '120px' }}>
         <ConversationsList
           selectedConversationId={selectedConversationId}
           onConversationSelect={onConversationSelect}
         />
       </Box>
+
+      {/* Bottom-right action stack */}
+      <Box
+        sx={{
+          position: 'absolute',
+          bottom: 24,
+          right: 20,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 1,
+        }}
+      >
+        <ThemeToggle />
+        <IconButton
+          aria-label="sign out"
+          onClick={handleSignOut}
+          size="small"
+          color="inherit"
+          sx={{ '& svg': { width: { xs: 24, sm: 28 }, height: { xs: 24, sm: 28 }, transform: { xs: 'translateX(3px)', sm: 'translateX(4px)' } } }}
+        >
+          <IconLogout size={28} />
+        </IconButton>
+        <Box
+          component="button"
+          aria-label="new conversation"
+          onClick={() => setNewConvOpen(true)}
+          sx={{
+            width: { xs: 32, sm: 40 },
+            height: { xs: 32, sm: 40 },
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: 'primary.main',
+            color: 'primary.contrastText',
+            border: 'none',
+            borderRadius: '2px',
+            cursor: 'pointer',
+            transition: 'background-color 0.15s ease, color 0.15s ease',
+            '&:hover': {
+              bgcolor: 'secondary.main',
+              color: 'primary.contrastText',
+            },
+          }}
+        >
+          <IconPlus size={20} />
+        </Box>
+      </Box>
+
+      <NewConversationDialog
+        open={newConvOpen}
+        onClose={() => setNewConvOpen(false)}
+        onConversationCreated={(conversationId) => {
+          onConversationSelect(conversationId);
+          setNewConvOpen(false);
+        }}
+      />
     </Box>
   );
 };

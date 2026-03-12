@@ -2,33 +2,18 @@ import MuiAppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Badge from '@mui/material/Badge';
-import MenuIcon from '@mui/icons-material/Menu';
-import LogoutIcon from '@mui/icons-material/Logout';
+import { IconMenu2 } from '@tabler/icons-react';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
-import { ThemeToggle } from './common/ThemeToggle';
-import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
 
 interface AppBarProps {
   drawerWidth: number;
   onDrawerToggle: () => void;
   hasUnreadMessages?: boolean;
+  conversationTitle?: string | null;
 }
 
-export default function AppBar({ drawerWidth, onDrawerToggle, hasUnreadMessages = false }: AppBarProps) {
-  const { signOut } = useAuth()
-  const navigate = useNavigate()
-
-  const handleSignOut = async () => {
-    try {
-      await signOut()
-      navigate('/login')
-    } catch (error) {
-      console.error('Error signing out:', error)
-    }
-  }
-
+export default function AppBar({ drawerWidth, onDrawerToggle, hasUnreadMessages = false, conversationTitle }: AppBarProps) {
   return (
     <MuiAppBar
       position="fixed"
@@ -50,10 +35,11 @@ export default function AppBar({ drawerWidth, onDrawerToggle, hasUnreadMessages 
           sx={{ mr: 2, display: { sm: 'none' } }}
         >
           <Badge color="primary" variant="dot" invisible={!hasUnreadMessages}>
-            <MenuIcon fontSize="small" />
+            <IconMenu2 size={18} />
           </Badge>
         </IconButton>
 
+        {/* Mobile: show app name or conversation title */}
         <Typography
           variant="h6"
           sx={{
@@ -64,23 +50,25 @@ export default function AppBar({ drawerWidth, onDrawerToggle, hasUnreadMessages 
             fontSize: '1.25rem',
           }}
         >
-          QUICKCHAT
+          {conversationTitle ?? 'QUICKCHAT'}
         </Typography>
 
+        {/* Desktop: show conversation title centered in the bar */}
+        {conversationTitle && (
+          <Typography
+            sx={{
+              display: { xs: 'none', sm: 'block' },
+              fontFamily: '"Share Tech Mono", monospace',
+              fontSize: '0.85rem',
+              letterSpacing: '0.08em',
+              color: 'text.secondary',
+            }}
+          >
+            {conversationTitle}
+          </Typography>
+        )}
+
         <Box sx={{ flexGrow: 1 }} />
-        <ThemeToggle />
-        <IconButton
-          color="inherit"
-          aria-label="sign out"
-          onClick={handleSignOut}
-          sx={{
-            ml: 1,
-            '&:hover': { color: 'secondary.main' },
-          }}
-          size="small"
-        >
-          <LogoutIcon fontSize="small" />
-        </IconButton>
       </Toolbar>
     </MuiAppBar>
   );

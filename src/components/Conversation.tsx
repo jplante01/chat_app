@@ -9,9 +9,8 @@ import Badge from '@mui/material/Badge';
 import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import DeleteIcon from '@mui/icons-material/Delete';
 import ListItemIcon from '@mui/material/ListItemIcon';
+import { IconDotsVertical, IconTrash } from '@tabler/icons-react';
 import { ConversationListItem } from '../types/database.types';
 import { useAuth } from '../contexts/AuthContext';
 import Stack from '@mui/material/Stack';
@@ -113,12 +112,9 @@ export default function Conversation({ conversation, selected = false, onClick, 
             aria-label="more actions"
             onClick={handleMenuClick}
             size="small"
-            sx={{
-              color: 'text.secondary',
-              '&:hover': { color: 'secondary.main' },
-            }}
+            sx={{ color: 'text.secondary' }}
           >
-            <MoreVertIcon fontSize="small" />
+            <IconDotsVertical size={16} />
           </IconButton>
           <Typography
             variant="caption"
@@ -261,7 +257,7 @@ export default function Conversation({ conversation, selected = false, onClick, 
       >
         <MenuItem onClick={handleDelete} sx={{ color: 'error.main', fontSize: '0.8rem' }}>
           <ListItemIcon sx={{ color: 'error.main', minWidth: 32 }}>
-            <DeleteIcon fontSize="small" />
+            <IconTrash size={16} />
           </ListItemIcon>
           delete
         </MenuItem>

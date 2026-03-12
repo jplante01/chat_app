@@ -4,7 +4,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
-import CloseIcon from '@mui/icons-material/Close';
+import { IconX } from '@tabler/icons-react';
 import UserSearch from './UserSearch';
 import { Profile } from '../types/database.types';
 import { useAuth } from '../contexts/AuthContext';
@@ -73,7 +73,7 @@ export default function NewConversationDialog({
             color: (theme) => theme.palette.grey[500],
           }}
         >
-          <CloseIcon />
+          <IconX size={18} />
         </IconButton>
       </DialogTitle>
 

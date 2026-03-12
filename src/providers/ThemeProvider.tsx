@@ -148,6 +148,18 @@ const theme = createTheme({
         },
       },
     },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 2,
+          transition: 'color 0.15s ease',
+          '&:hover': {
+            backgroundColor: 'transparent',
+            color: 'var(--mui-palette-secondary-main)',
+          },
+        },
+      },
+    },
     MuiFab: {
       styleOverrides: {
         root: {

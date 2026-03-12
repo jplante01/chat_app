@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
-import SendIcon from '@mui/icons-material/Send';
+import { IconSend } from '@tabler/icons-react';
 
 interface MessageInputProps {
   onSend?: (content: string) => void;
@@ -95,12 +95,11 @@ export default function MessageInput({ onSend, disabled = false }: MessageInputP
         sx={{
           mb: 0.5,
           color: message.trim() ? 'primary.main' : 'text.secondary',
-          '&:hover': { color: 'secondary.main' },
           '&.Mui-disabled': { color: 'divider' },
         }}
         size="small"
       >
-        <SendIcon fontSize="small" />
+        <IconSend size={18} />
       </IconButton>
     </Box>
   );
