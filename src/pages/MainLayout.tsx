@@ -22,6 +22,17 @@ export default function MainLayout() {
   // Fetch conversations to detect unread messages for AppBar badge
   const { data: conversations } = useConversations(profile?.id || null);
 
+  // Derive the title for the selected conversation
+  const conversationTitle = React.useMemo(() => {
+    if (!selectedConversationId || !conversations || !profile?.id) return null;
+    const conv = conversations.find(c => c.id === selectedConversationId);
+    if (!conv) return null;
+    const others = conv.participants
+      .filter(p => p.profile.id !== profile.id)
+      .map(p => p.profile.username);
+    return others.length > 0 ? others.join(', ') : null;
+  }, [selectedConversationId, conversations, profile?.id]);
+
   // Check if there are any unread messages across all conversations
   const hasUnreadMessages = React.useMemo(() => {
     if (!conversations || !profile?.id) return false;
@@ -59,7 +70,7 @@ export default function MainLayout() {
 
   return (
     <Box sx={{ display: 'flex' }}>
-      <AppBar drawerWidth={drawerWidth} onDrawerToggle={handleDrawerToggle} hasUnreadMessages={hasUnreadMessages} />
+      <AppBar drawerWidth={drawerWidth} onDrawerToggle={handleDrawerToggle} hasUnreadMessages={hasUnreadMessages} conversationTitle={conversationTitle} />
       <Drawer
         drawerWidth={drawerWidth}
         mobileOpen={mobileOpen}

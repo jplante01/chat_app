@@ -10,9 +10,10 @@ interface AppBarProps {
   drawerWidth: number;
   onDrawerToggle: () => void;
   hasUnreadMessages?: boolean;
+  conversationTitle?: string | null;
 }
 
-export default function AppBar({ drawerWidth, onDrawerToggle, hasUnreadMessages = false }: AppBarProps) {
+export default function AppBar({ drawerWidth, onDrawerToggle, hasUnreadMessages = false, conversationTitle }: AppBarProps) {
   return (
     <MuiAppBar
       position="fixed"
@@ -38,6 +39,7 @@ export default function AppBar({ drawerWidth, onDrawerToggle, hasUnreadMessages 
           </Badge>
         </IconButton>
 
+        {/* Mobile: show app name or conversation title */}
         <Typography
           variant="h6"
           sx={{
@@ -48,8 +50,23 @@ export default function AppBar({ drawerWidth, onDrawerToggle, hasUnreadMessages 
             fontSize: '1.25rem',
           }}
         >
-          QUICKCHAT
+          {conversationTitle ?? 'QUICKCHAT'}
         </Typography>
+
+        {/* Desktop: show conversation title centered in the bar */}
+        {conversationTitle && (
+          <Typography
+            sx={{
+              display: { xs: 'none', sm: 'block' },
+              fontFamily: '"Share Tech Mono", monospace',
+              fontSize: '0.85rem',
+              letterSpacing: '0.08em',
+              color: 'text.secondary',
+            }}
+          >
+            {conversationTitle}
+          </Typography>
+        )}
 
         <Box sx={{ flexGrow: 1 }} />
       </Toolbar>
