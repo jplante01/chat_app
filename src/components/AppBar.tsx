@@ -5,6 +5,7 @@ import Badge from '@mui/material/Badge';
 import MenuIcon from '@mui/icons-material/Menu';
 import LogoutIcon from '@mui/icons-material/Logout';
 import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
 import { ThemeToggle } from './common/ThemeToggle';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -36,11 +37,11 @@ export default function AppBar({ drawerWidth, onDrawerToggle, hasUnreadMessages 
         width: { sm: `calc(100% - ${drawerWidth}px)` },
         ml: { sm: `${drawerWidth}px` },
         bgcolor: 'background.default',
-        borderBottom: 1,
+        borderBottom: '1px dashed',
         borderColor: 'divider',
       }}
     >
-      <Toolbar sx={{ bgcolor: 'background.default' }}>
+      <Toolbar sx={{ bgcolor: 'background.default', minHeight: { xs: 48, sm: 52 } }}>
         <IconButton
           color="inherit"
           aria-label="open drawer"
@@ -49,14 +50,36 @@ export default function AppBar({ drawerWidth, onDrawerToggle, hasUnreadMessages 
           sx={{ mr: 2, display: { sm: 'none' } }}
         >
           <Badge color="primary" variant="dot" invisible={!hasUnreadMessages}>
-            <MenuIcon />
+            <MenuIcon fontSize="small" />
           </Badge>
         </IconButton>
 
+        <Typography
+          variant="h6"
+          sx={{
+            fontFamily: '"Bebas Neue", "Orbitron", sans-serif',
+            letterSpacing: '0.15em',
+            color: 'primary.main',
+            display: { xs: 'block', sm: 'none' },
+            fontSize: '1.25rem',
+          }}
+        >
+          QUICKCHAT
+        </Typography>
+
         <Box sx={{ flexGrow: 1 }} />
         <ThemeToggle />
-        <IconButton color="inherit" aria-label="sign out" onClick={handleSignOut} sx={{ ml: 1 }}>
-          <LogoutIcon />
+        <IconButton
+          color="inherit"
+          aria-label="sign out"
+          onClick={handleSignOut}
+          sx={{
+            ml: 1,
+            '&:hover': { color: 'secondary.main' },
+          }}
+          size="small"
+        >
+          <LogoutIcon fontSize="small" />
         </IconButton>
       </Toolbar>
     </MuiAppBar>

@@ -29,10 +29,6 @@ export default function ConversationsList({
   const [conversationToDelete, setConversationToDelete] = useState<ConversationListItem | null>(null);
   const deleteConversation = useDeleteConversation();
 
-  // NOTE: Realtime subscription is now set up in MainLayout
-  // to persist across component re-renders and prevent subscription loops
-
-  // Handle delete conversation request
   const handleDeleteRequest = (conversationId: string) => {
     const conversation = conversations?.find(c => c.id === conversationId);
     if (conversation) {
@@ -41,21 +37,15 @@ export default function ConversationsList({
     }
   };
 
-  // Handle confirmed delete
   const handleDeleteConfirm = () => {
     if (!conversationToDelete || !profile?.id) return;
 
     deleteConversation.mutate(
-      {
-        conversationId: conversationToDelete.id,
-        userId: profile.id,
-      },
+      { conversationId: conversationToDelete.id, userId: profile.id },
       {
         onSuccess: () => {
           setDeleteDialogOpen(false);
           setConversationToDelete(null);
-
-          // If the deleted conversation was selected, deselect it
           if (selectedConversationId === conversationToDelete.id) {
             onConversationSelect('');
           }
@@ -64,94 +54,76 @@ export default function ConversationsList({
     );
   };
 
-  // Handle delete dialog close
   const handleDeleteCancel = () => {
     setDeleteDialogOpen(false);
     setConversationToDelete(null);
   };
 
-  // Handle conversation selection
   const handleConversationSelect = (conversationId: string) => {
-    // Call parent handler to update selected conversation
     onConversationSelect(conversationId);
-
-    // Note: last_read_at is updated in ChatWindow when conversation is actually displayed
-    // This ensures accurate unread detection for closed conversations
   };
 
-  // Loading state
+  const fab = (
+    <Fab
+      color="primary"
+      aria-label="new conversation"
+      onClick={() => setDialogOpen(true)}
+      size="small"
+      sx={{
+        position: 'absolute',
+        bottom: 16,
+        right: 16,
+        bgcolor: 'primary.main',
+        color: 'primary.contrastText',
+        '&:hover': { bgcolor: 'secondary.main' },
+      }}
+    >
+      <AddIcon fontSize="small" />
+    </Fab>
+  );
+
   if (isLoading) {
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          p: 4,
-        }}
-      >
-        <CircularProgress />
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 4 }}>
+        <CircularProgress size={20} sx={{ color: 'primary.main' }} />
       </Box>
     );
   }
 
-  // Error state
   if (error) {
     return (
       <Box sx={{ p: 2 }}>
-        <Typography color="error" variant="body2">
-          Failed to load conversations
-        </Typography>
-        <Typography color="text.secondary" variant="caption">
-          {error instanceof Error ? error.message : 'Unknown error'}
+        <Typography sx={{ color: 'error.main', fontSize: '0.75rem' }}>
+          [error] failed to load conversations
         </Typography>
       </Box>
     );
   }
 
-  // Empty state
   if (!conversations || conversations.length === 0) {
     return (
       <>
         <Box sx={{ p: 2, textAlign: 'center' }}>
-          <Typography color="text.secondary" variant="body2">
-            No conversations yet
+          <Typography sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>
+            no conversations yet
           </Typography>
-          <Typography color="text.secondary" variant="caption">
-            Click the + button to start a conversation
+          <Typography sx={{ color: 'text.secondary', fontSize: '0.65rem', opacity: 0.6, mt: 0.5 }}>
+            press + to start one
           </Typography>
         </Box>
-
-        {/* Floating Action Button */}
-        <Fab
-          color="primary"
-          aria-label="new conversation"
-          onClick={() => setDialogOpen(true)}
-          sx={{
-            position: 'absolute',
-            bottom: 16,
-            right: 16,
-          }}
-        >
-          <AddIcon />
-        </Fab>
-
-        {/* New Conversation Dialog */}
+        {fab}
         <NewConversationDialog
           open={dialogOpen}
           onClose={() => setDialogOpen(false)}
-          onConversationCreated={(conversationId) => {
-            onConversationSelect(conversationId);
-          }}
+          onConversationCreated={(conversationId) => onConversationSelect(conversationId)}
         />
       </>
     );
   }
 
-  // Success state - render conversations
   return (
     <>
-      <List sx={{ width: '100%', bgcolor: 'background.paper', p: 0, pb: 0 }}>
+      <List sx={{ width: '100%', p: 0, pb: 8 }}>
         {conversations.map((conversation) => (
           <Conversation
             key={conversation.id}
@@ -163,30 +135,14 @@ export default function ConversationsList({
         ))}
       </List>
 
-      {/* Floating Action Button */}
-      <Fab
-        color="primary"
-        aria-label="new conversation"
-        onClick={() => setDialogOpen(true)}
-        sx={{
-          position: 'absolute',
-          bottom: 16,
-          right: 16,
-        }}
-      >
-        <AddIcon />
-      </Fab>
+      {fab}
 
-      {/* New Conversation Dialog */}
       <NewConversationDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
-        onConversationCreated={(conversationId) => {
-          onConversationSelect(conversationId);
-        }}
+        onConversationCreated={(conversationId) => onConversationSelect(conversationId)}
       />
 
-      {/* Delete Confirmation Dialog */}
       <DeleteConversationDialog
         open={deleteDialogOpen}
         conversationName={

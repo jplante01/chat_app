@@ -14,22 +14,18 @@ function formatMessageTime(timestamp: string): string {
   return date.toLocaleTimeString('en-US', {
     hour: 'numeric',
     minute: '2-digit',
-    hour12: true
+    hour12: true,
   });
 }
 
-export default function MessageBubble({
-  message,
-  isOwnMessage,
-  showAvatar = true
-}: MessageBubbleProps) {
+export default function MessageBubble({ message, isOwnMessage, showAvatar = true }: MessageBubbleProps) {
   return (
     <Box
       sx={{
         display: 'flex',
         flexDirection: isOwnMessage ? 'row-reverse' : 'row',
         alignItems: 'flex-end',
-        mb: 2,
+        mb: 1.5,
         gap: 1,
       }}
     >
@@ -37,10 +33,13 @@ export default function MessageBubble({
         <Avatar
           src={message.sender.avatar_url || undefined}
           sx={{
-            width: { xs: 32, sm: 40 },
-            height: { xs: 32, sm: 40 },
-            visibility: showAvatar ? 'visible' : 'hidden',
-            mb: 3,
+            width: { xs: 28, sm: 32 },
+            height: { xs: 28, sm: 32 },
+            mb: '18px',
+            fontSize: '0.7rem',
+            fontWeight: 700,
+            bgcolor: isOwnMessage ? 'primary.main' : 'action.selected',
+            color: isOwnMessage ? 'primary.contrastText' : 'text.secondary',
           }}
         >
           {message.sender.username?.[0]?.toUpperCase() || '?'}
@@ -55,18 +54,42 @@ export default function MessageBubble({
           alignItems: isOwnMessage ? 'flex-end' : 'flex-start',
         }}
       >
+        {!isOwnMessage && (
+          <Typography
+            variant="caption"
+            sx={{
+              color: 'secondary.main',
+              px: 1,
+              mb: 0.25,
+              fontSize: '0.65rem',
+              letterSpacing: '0.05em',
+            }}
+          >
+            {message.sender.username}
+          </Typography>
+        )}
+
         <Box
           sx={{
-            bgcolor: isOwnMessage ? 'primary.main' : 'grey.200',
-            color: 'primary.contrastText',
-            // color: isOwnMessage ? 'primary.contrastText' : 'text.primary',
-            borderRadius: 2,
-            px: 2,
-            py: 1,
+            bgcolor: isOwnMessage ? 'primary.main' : 'background.paper',
+            color: isOwnMessage ? 'primary.contrastText' : 'text.primary',
+            borderRadius: '2px',
+            px: 1.5,
+            py: 0.75,
             wordWrap: 'break-word',
+            border: isOwnMessage ? 'none' : '1px dashed',
+            borderColor: 'divider',
+            position: 'relative',
           }}
         >
-          <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+          <Typography
+            variant="body2"
+            sx={{
+              whiteSpace: 'pre-wrap',
+              fontSize: '0.85rem',
+              lineHeight: 1.5,
+            }}
+          >
             {message.content}
           </Typography>
         </Box>
@@ -75,8 +98,10 @@ export default function MessageBubble({
           variant="caption"
           sx={{
             color: 'text.secondary',
-            mt: 0.5,
-            px: 1,
+            mt: 0.25,
+            px: 0.5,
+            fontSize: '0.6rem',
+            opacity: 0.6,
           }}
         >
           {formatMessageTime(message.created_at)}

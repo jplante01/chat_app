@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
   Box,
-  Container,
   TextField,
   Button,
   Typography,
@@ -27,7 +26,6 @@ export default function Signup() {
     e.preventDefault();
     setError('');
 
-    // Validation
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -56,139 +54,181 @@ export default function Signup() {
   };
 
   return (
-    <Stack sx={{ height: '100%' }}>
-      <Stack
-        direction="row"
-        alignItems="center"
-        sx={{ padding: { xs: '0.5rem', sm: '1.5rem' }, marginBottom: '2rem' }}
-        justifyContent="space-between"
-      >
-        <Stack direction="row" alignItems="center">
-          <Box
-            sx={{
-              width: { xs: '60px', sm: '80px' },
-              height: { xs: '60px', sm: '80px' },
-              marginRight: '0.5rem',
-            }}
-          >
-            <QuickChatLogo
-              sx={{
-                width: '100%',
-                height: '100%',
-                // color: theme.palette.text.primary,
-              }}
-            />
-          </Box>
-          <Typography
-            variant="h4"
-            sx={{
-              fontSize: { xs: '1.5rem', sm: '2rem' },
-              fontFamily: '"Orbitron", sans-serif',
-              fontWeight: 700,
-            }}
-          >
-            QuickChat
-          </Typography>
-        </Stack>
-      </Stack>
-
-      <Container maxWidth="sm">
-        <Box
+    <Box
+      sx={{
+        minHeight: '100vh',
+        bgcolor: 'background.default',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        p: 2,
+      }}
+    >
+      {/* Header / Logo */}
+      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 5 }}>
+        <Box sx={{ width: 40, height: 40, color: 'primary.main' }}>
+          <QuickChatLogo sx={{ width: '100%', height: '100%' }} />
+        </Box>
+        <Typography
           sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '100%',
-            marginTop: '2rem',
-            padding: '2rem',
-            position: 'relative',
+            fontFamily: '"Bebas Neue", "Orbitron", sans-serif',
+            fontSize: { xs: '1.8rem', sm: '2.2rem' },
+            letterSpacing: '0.18em',
+            color: 'primary.main',
+            lineHeight: 1,
           }}
         >
-          {error && (
-            <Alert
-              severity="error"
+          QUICKCHAT
+        </Typography>
+      </Stack>
+
+      {/* Form panel */}
+      <Box
+        sx={{
+          width: '100%',
+          maxWidth: 360,
+          border: '1px dashed',
+          borderColor: 'divider',
+          p: 3,
+          position: 'relative',
+        }}
+      >
+        {/* Corner label */}
+        <Typography
+          sx={{
+            position: 'absolute',
+            top: -10,
+            left: 12,
+            bgcolor: 'background.default',
+            px: 1,
+            fontSize: '0.65rem',
+            color: 'secondary.main',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+          }}
+        >
+          auth / register
+        </Typography>
+
+        {error && (
+          <Alert
+            severity="error"
+            sx={{
+              mb: 2,
+              borderRadius: '2px',
+              fontSize: '0.75rem',
+              '& .MuiAlert-message': { fontFamily: '"Share Tech Mono", monospace' },
+            }}
+          >
+            {error}
+          </Alert>
+        )}
+
+        <Box component="form" onSubmit={handleSubmit} noValidate>
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="username"
+            label="username"
+            name="username"
+            autoComplete="username"
+            autoFocus
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            size="small"
+            InputLabelProps={{ sx: { fontSize: '0.8rem', letterSpacing: '0.05em' } }}
+            inputProps={{ sx: { fontSize: '0.85rem' } }}
+          />
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="email"
+            label="email"
+            name="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            size="small"
+            InputLabelProps={{ sx: { fontSize: '0.8rem', letterSpacing: '0.05em' } }}
+            inputProps={{ sx: { fontSize: '0.85rem' } }}
+          />
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            name="password"
+            label="password"
+            type="password"
+            id="password"
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            size="small"
+            InputLabelProps={{ sx: { fontSize: '0.8rem', letterSpacing: '0.05em' } }}
+            inputProps={{ sx: { fontSize: '0.85rem' } }}
+          />
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            name="confirmPassword"
+            label="confirm password"
+            type="password"
+            id="confirmPassword"
+            autoComplete="new-password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            size="small"
+            InputLabelProps={{ sx: { fontSize: '0.8rem', letterSpacing: '0.05em' } }}
+            inputProps={{ sx: { fontSize: '0.85rem' } }}
+          />
+          <Button
+            type="submit"
+            fullWidth
+            variant="outlined"
+            color="primary"
+            sx={{
+              mt: 2.5,
+              mb: 1.5,
+              py: 1,
+              fontSize: '0.8rem',
+              letterSpacing: '0.15em',
+              borderColor: 'primary.main',
+              color: 'primary.main',
+              '&:hover': {
+                bgcolor: 'primary.main',
+                color: 'primary.contrastText',
+              },
+            }}
+            disabled={loading}
+          >
+            {loading ? 'registering...' : '[ create account ]'}
+          </Button>
+          <Typography
+            sx={{
+              textAlign: 'center',
+              fontSize: '0.7rem',
+              color: 'text.secondary',
+            }}
+          >
+            have an account?{' '}
+            <Link
+              component={RouterLink}
+              to="/login"
               sx={{
-                position: 'absolute',
-                bottom: 'calc(100%)',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: 'calc(100% - 4rem)',
-                maxWidth: '400px',
-                zIndex: 10,
+                color: 'secondary.main',
+                textDecorationColor: 'secondary.main',
+                '&:hover': { color: 'primary.main' },
               }}
             >
-              {error}
-            </Alert>
-          )}
-
-          <Box component="form" onSubmit={handleSubmit} noValidate>
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="username"
-              label="Username"
-              name="username"
-              autoComplete="username"
-              autoFocus
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-            />
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="email"
-              label="Email Address"
-              name="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Password"
-              type="password"
-              id="password"
-              autoComplete="new-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="confirmPassword"
-              label="Confirm Password"
-              type="password"
-              id="confirmPassword"
-              autoComplete="new-password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-            />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-              disabled={loading}
-            >
-              {loading ? 'Signing Up...' : 'Sign Up'}
-            </Button>
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="body2">
-                Already have an account?{' '}
-                <Link component={RouterLink} to="/login">
-                  Sign In
-                </Link>
-              </Typography>
-            </Box>
-          </Box>
+              sign in
+            </Link>
+          </Typography>
         </Box>
-      </Container>
-    </Stack>
+      </Box>
+    </Box>
   );
 }

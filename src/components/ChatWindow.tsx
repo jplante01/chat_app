@@ -18,16 +18,12 @@ export default function ChatWindow({ drawerWidth, conversationId }: ChatWindowPr
   const { data: messages, isLoading, error } = useMessages(conversationId);
   const sendMessage = useSendMessage();
 
-  // Auto-scroll to bottom when messages change
-  // useLayoutEffect runs synchronously before browser paint, preventing visible scroll
   useLayoutEffect(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
   }, [messages]);
 
-  // Mark conversation as read when user views it or when messages update
-  // This handles: opening conversation, new messages arriving, and user sending messages
   useEffect(() => {
     if (conversationId && profile?.id) {
       participantsDb.markAsRead(conversationId, profile.id).catch((err) => {
@@ -38,15 +34,9 @@ export default function ChatWindow({ drawerWidth, conversationId }: ChatWindowPr
 
   const handleSendMessage = (content: string) => {
     if (!conversationId || !profile?.id) return;
-
-    sendMessage.mutate({
-      conversation_id: conversationId,
-      sender_id: profile.id,
-      content,
-    });
+    sendMessage.mutate({ conversation_id: conversationId, sender_id: profile.id, content });
   };
 
-  // No conversation selected
   if (!conversationId) {
     return (
       <Box
@@ -59,7 +49,7 @@ export default function ChatWindow({ drawerWidth, conversationId }: ChatWindowPr
           height: '100dvh',
         }}
       >
-        <Toolbar />
+        <Toolbar sx={{ minHeight: { xs: 48, sm: 52 } }} />
         <Box
           sx={{
             flexGrow: 1,
@@ -70,23 +60,31 @@ export default function ChatWindow({ drawerWidth, conversationId }: ChatWindowPr
         >
           <Box
             sx={{
-              bgcolor: 'background.paper',
-              borderRadius: 2,
-              px: 8,
-              py: 4,
-
+              border: '1px dashed',
+              borderColor: 'divider',
+              px: 6,
+              py: 3,
+              textAlign: 'center',
             }}
           >
             <Typography
-              color="text.secondary"
-              variant="h5"
               sx={{
-                fontWeight: 300,
-                textAlign: 'center',
+                color: 'text.secondary',
+                fontSize: '0.8rem',
                 letterSpacing: '0.1em',
+                mb: 0.5,
               }}
             >
-              Select a conversation to start chatting
+              {'// select a conversation'}
+            </Typography>
+            <Typography
+              sx={{
+                color: 'primary.main',
+                fontSize: '0.7rem',
+                opacity: 0.5,
+              }}
+            >
+              {'waiting for input_'}
             </Typography>
           </Box>
         </Box>
@@ -94,7 +92,6 @@ export default function ChatWindow({ drawerWidth, conversationId }: ChatWindowPr
     );
   }
 
-  // Loading state
   if (isLoading) {
     return (
       <Box
@@ -104,15 +101,14 @@ export default function ChatWindow({ drawerWidth, conversationId }: ChatWindowPr
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          width: { sm: `calc(100% - ${drawerWidth}px)` }
+          width: { sm: `calc(100% - ${drawerWidth}px)` },
         }}
       >
-        <CircularProgress />
+        <CircularProgress size={20} sx={{ color: 'primary.main' }} />
       </Box>
     );
   }
 
-  // Error state
   if (error) {
     return (
       <Box
@@ -124,14 +120,14 @@ export default function ChatWindow({ drawerWidth, conversationId }: ChatWindowPr
           alignItems: 'center',
           justifyContent: 'center',
           width: { sm: `calc(100% - ${drawerWidth}px)` },
-          p: 3
+          p: 3,
         }}
       >
-        <Typography color="error" variant="h6" gutterBottom>
-          Failed to load messages
+        <Typography sx={{ color: 'error.main', fontSize: '0.8rem' }}>
+          [error] failed to load messages
         </Typography>
-        <Typography color="text.secondary" variant="body2">
-          {error instanceof Error ? error.message : 'Unknown error'}
+        <Typography sx={{ color: 'text.secondary', fontSize: '0.75rem', mt: 0.5 }}>
+          {error instanceof Error ? error.message : 'unknown error'}
         </Typography>
       </Box>
     );
@@ -148,7 +144,7 @@ export default function ChatWindow({ drawerWidth, conversationId }: ChatWindowPr
         height: '100dvh',
       }}
     >
-      <Toolbar />
+      <Toolbar sx={{ minHeight: { xs: 48, sm: 52 } }} />
 
       <Box
         ref={messagesContainerRef}
@@ -161,15 +157,13 @@ export default function ChatWindow({ drawerWidth, conversationId }: ChatWindowPr
         }}
       >
         {messages && messages.length > 0 ? (
-          <>
-            {messages.map((message) => (
-              <MessageBubble
-                key={message.id}
-                message={message}
-                isOwnMessage={message.sender_id === profile?.id}
-              />
-            ))}
-          </>
+          messages.map((message) => (
+            <MessageBubble
+              key={message.id}
+              message={message}
+              isOwnMessage={message.sender_id === profile?.id}
+            />
+          ))
         ) : (
           <Box
             sx={{
@@ -179,8 +173,8 @@ export default function ChatWindow({ drawerWidth, conversationId }: ChatWindowPr
               flexGrow: 1,
             }}
           >
-            <Typography color="text.secondary" variant="body2">
-              No messages yet. Start the conversation!
+            <Typography sx={{ color: 'text.secondary', fontSize: '0.75rem', opacity: 0.6 }}>
+              {'// no messages yet'}
             </Typography>
           </Box>
         )}
