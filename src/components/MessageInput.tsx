@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
+import Typography from '@mui/material/Typography';
 import SendIcon from '@mui/icons-material/Send';
 
 interface MessageInputProps {
@@ -32,34 +33,74 @@ export default function MessageInput({ onSend, disabled = false }: MessageInputP
       component="form"
       onSubmit={handleSubmit}
       sx={{
-        p: 2,
-        bgcolor: 'background.paper',
-        borderTop: 1,
+        px: 2,
+        py: 1.5,
+        bgcolor: 'background.default',
+        borderTop: '1px dashed',
         borderColor: 'divider',
         display: 'flex',
         gap: 1,
         alignItems: 'flex-end',
       }}
     >
+      <Typography
+        sx={{
+          color: 'primary.main',
+          fontSize: '0.85rem',
+          pb: 0.9,
+          userSelect: 'none',
+          flexShrink: 0,
+        }}
+      >
+        {'>'}
+      </Typography>
       <TextField
         fullWidth
         multiline
         maxRows={4}
-        placeholder="Type a message..."
+        placeholder="type a message..."
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         onKeyPress={handleKeyPress}
         disabled={disabled}
         variant="outlined"
         size="small"
+        sx={{
+          '& .MuiOutlinedInput-root': {
+            '& fieldset': {
+              borderColor: 'divider',
+              borderStyle: 'dashed',
+            },
+            '&:hover fieldset': {
+              borderColor: 'primary.main',
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: 'primary.main',
+              borderWidth: 1,
+              borderStyle: 'solid',
+            },
+          },
+          '& .MuiInputBase-input': {
+            fontSize: '0.85rem',
+            '&::placeholder': {
+              color: 'text.secondary',
+              opacity: 0.5,
+            },
+          },
+        }}
       />
       <IconButton
         type="submit"
-        color="primary"
         disabled={disabled || !message.trim()}
-        sx={{ mb: 0.5 }}
+        sx={{
+          mb: 0.5,
+          color: message.trim() ? 'primary.main' : 'text.secondary',
+          '&:hover': { color: 'secondary.main' },
+          '&.Mui-disabled': { color: 'divider' },
+        }}
+        size="small"
       >
-        <SendIcon />
+        <SendIcon fontSize="small" />
       </IconButton>
     </Box>
   );

@@ -20,24 +20,47 @@ export default function UserProfile({ profile, onSettingsClick }: UserProfilePro
         alignItems: 'center',
         gap: 1.5,
         width: '100%',
-        minHeight: { xs: '56px', sm: '64px' },
+        minHeight: { xs: '48px', sm: '52px' },
       }}
     >
       <Avatar
         src={profile.avatar_url || undefined}
-        sx={{ width: 40, height: 40 }}
+        sx={{
+          width: 32,
+          height: 32,
+          bgcolor: 'primary.main',
+          color: 'primary.contrastText',
+          fontSize: '0.75rem',
+          fontWeight: 700,
+        }}
       >
         {profile.username?.[0]?.toUpperCase() || '?'}
       </Avatar>
 
       <Box sx={{ flexGrow: 1, minWidth: 0 }}>
         <Typography
-          variant="subtitle1"
+          variant="caption"
+          sx={{
+            display: 'block',
+            color: 'text.secondary',
+            fontSize: '0.6rem',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            lineHeight: 1.2,
+          }}
+        >
+          online
+        </Typography>
+        <Typography
+          variant="body2"
           sx={{
             fontWeight: 600,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
+            color: 'primary.main',
+            fontSize: '0.8rem',
+            letterSpacing: '0.03em',
           }}
         >
           {profile.username}
@@ -47,9 +70,12 @@ export default function UserProfile({ profile, onSettingsClick }: UserProfilePro
       <IconButton
         size="small"
         onClick={onSettingsClick}
-        sx={{ color: 'text.secondary' }}
+        sx={{
+          color: 'text.secondary',
+          '&:hover': { color: 'secondary.main' },
+        }}
       >
-        <SettingsIcon />
+        <SettingsIcon sx={{ fontSize: '1rem' }} />
       </IconButton>
     </Box>
   );
