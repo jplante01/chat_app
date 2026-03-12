@@ -109,8 +109,8 @@ const DrawerContent = ({ selectedConversationId, onConversationSelect }: DrawerC
           aria-label="new conversation"
           onClick={() => setNewConvOpen(true)}
           sx={{
-            width: 40,
-            height: 40,
+            width: { xs: 32, sm: 40 },
+            height: { xs: 32, sm: 40 },
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
