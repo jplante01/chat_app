@@ -63,7 +63,7 @@ function formatTimestamp(timestamp: string): string {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return 'Just now';
+  if (diffMins < 1) return 'Now';
   if (diffMins < 60) return `${diffMins}m`;
   if (diffHours < 24) return `${diffHours}h`;
   if (diffDays < 7) return `${diffDays}d`;
@@ -108,8 +108,8 @@ export default function Conversation({ conversation, selected = false, onClick, 
     <ListItem
       disablePadding
       disableGutters
-      secondaryAction={<Stack direction="column" alignItems="center" sx={{ marginRight: 0 }}>
-
+      secondaryAction={
+      <Stack direction="column" alignItems="center" sx={{ marginRight: 0 }}>
         <IconButton
           edge="start"
           aria-label="more actions"
@@ -118,12 +118,14 @@ export default function Conversation({ conversation, selected = false, onClick, 
         >
           <MoreVertIcon />
         </IconButton>
-                <Typography
+        <Typography
           variant="caption"
+          align="center"
           sx={{
             // color: selected ? 'primary.main' : 'text.secondary',
             ml: 1,
             mr: 1,
+            minWidth: { xs: 32, sm: 40 },
           }}
         >
           {formattedTimestamp}

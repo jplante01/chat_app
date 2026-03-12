@@ -48,7 +48,7 @@ export function useSubscribeToConversations(userId: string | null | undefined) {
         'broadcast',
         { event: '*' }, // Listen to all events (INSERT, UPDATE, DELETE)
         (payload) => {
-          const { table, event: eventType } = payload.payload || {};
+          const { table } = payload.payload || {};
 
           // Handle conversation participant changes (creation, deletion, updates)
           if (table === 'conversation_participants') {
