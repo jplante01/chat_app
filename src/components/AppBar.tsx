@@ -2,8 +2,7 @@ import MuiAppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Badge from '@mui/material/Badge';
-import MenuIcon from '@mui/icons-material/Menu';
-import LogoutIcon from '@mui/icons-material/Logout';
+import { IconMenu2, IconLogout } from '@tabler/icons-react';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import { ThemeToggle } from './common/ThemeToggle';
@@ -50,7 +49,7 @@ export default function AppBar({ drawerWidth, onDrawerToggle, hasUnreadMessages 
           sx={{ mr: 2, display: { sm: 'none' } }}
         >
           <Badge color="primary" variant="dot" invisible={!hasUnreadMessages}>
-            <MenuIcon fontSize="small" />
+            <IconMenu2 size={18} />
           </Badge>
         </IconButton>
 
@@ -73,13 +72,10 @@ export default function AppBar({ drawerWidth, onDrawerToggle, hasUnreadMessages 
           color="inherit"
           aria-label="sign out"
           onClick={handleSignOut}
-          sx={{
-            ml: 1,
-            '&:hover': { color: 'secondary.main' },
-          }}
+          sx={{ ml: 1 }}
           size="small"
         >
-          <LogoutIcon fontSize="small" />
+          <IconLogout size={18} />
         </IconButton>
       </Toolbar>
     </MuiAppBar>

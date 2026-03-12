@@ -9,7 +9,7 @@ import ListItemText from '@mui/material/ListItemText';
 import Avatar from '@mui/material/Avatar';
 import InputAdornment from '@mui/material/InputAdornment';
 import CircularProgress from '@mui/material/CircularProgress';
-import SearchIcon from '@mui/icons-material/Search';
+import { IconSearch } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { profilesDb } from '../db';
 import { Profile } from '../types/database.types';
@@ -46,7 +46,7 @@ export default function UserSearch({ currentUserId, onUserSelect }: UserSearchPr
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon />
+                <IconSearch size={16} />
               </InputAdornment>
             ),
           }}

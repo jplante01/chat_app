@@ -2,7 +2,7 @@ import Box from '@mui/material/Box';
 import Avatar from '@mui/material/Avatar';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
-import SettingsIcon from '@mui/icons-material/Settings';
+import { IconSettings } from '@tabler/icons-react';
 import { Profile } from '../types/database.types';
 
 interface UserProfileProps {
@@ -70,12 +70,9 @@ export default function UserProfile({ profile, onSettingsClick }: UserProfilePro
       <IconButton
         size="small"
         onClick={onSettingsClick}
-        sx={{
-          color: 'text.secondary',
-          '&:hover': { color: 'secondary.main' },
-        }}
+        sx={{ color: 'text.secondary' }}
       >
-        <SettingsIcon sx={{ fontSize: '1rem' }} />
+        <IconSettings size={16} />
       </IconButton>
     </Box>
   );

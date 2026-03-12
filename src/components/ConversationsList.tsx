@@ -4,7 +4,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Fab from '@mui/material/Fab';
-import AddIcon from '@mui/icons-material/Add';
+import { IconPlus } from '@tabler/icons-react';
 import { ConversationListItem } from '../types/database.types';
 import Conversation from './Conversation';
 import NewConversationDialog from './NewConversationDialog';
@@ -78,7 +78,7 @@ export default function ConversationsList({
         '&:hover': { bgcolor: 'secondary.main' },
       }}
     >
-      <AddIcon fontSize="small" />
+      <IconPlus size={18} />
     </Fab>
   );
 
