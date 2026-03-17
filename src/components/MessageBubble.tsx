@@ -1,14 +1,6 @@
 import Box from '@mui/material/Box';
-import Avatar from '@mui/material/Avatar';
 import Typography from '@mui/material/Typography';
 import { MessageWithSender } from '../types/database.types';
-import { getAvatarUrl } from '../utils/avatarUrl';
-
-interface MessageBubbleProps {
-  message: MessageWithSender;
-  isOwnMessage: boolean;
-  showAvatar?: boolean;
-}
 
 function formatMessageTime(timestamp: string): string {
   const date = new Date(timestamp);
@@ -19,7 +11,12 @@ function formatMessageTime(timestamp: string): string {
   });
 }
 
-export default function MessageBubble({ message, isOwnMessage, showAvatar = true }: MessageBubbleProps) {
+interface MessageBubbleProps {
+  message: MessageWithSender;
+  isOwnMessage: boolean;
+}
+
+export default function MessageBubble({ message, isOwnMessage }: MessageBubbleProps) {
   return (
     <Box
       sx={{
@@ -27,25 +24,8 @@ export default function MessageBubble({ message, isOwnMessage, showAvatar = true
         flexDirection: isOwnMessage ? 'row-reverse' : 'row',
         alignItems: 'flex-end',
         mb: 1.5,
-        gap: 1,
       }}
     >
-      {showAvatar && (
-        <Avatar
-          src={getAvatarUrl(message.sender.avatar_url, message.sender.updated_at)}
-          sx={{
-            width: { xs: 28, sm: 32 },
-            height: { xs: 28, sm: 32 },
-            mb: '18px',
-            fontSize: '0.7rem',
-            fontWeight: 700,
-            bgcolor: isOwnMessage ? 'primary.main' : 'action.selected',
-            color: isOwnMessage ? 'primary.contrastText' : 'text.secondary',
-          }}
-        >
-          {message.sender.username?.[0]?.toUpperCase() || '?'}
-        </Avatar>
-      )}
 
       <Box
         sx={{
