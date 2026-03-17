@@ -2,6 +2,7 @@ import MuiAppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Badge from '@mui/material/Badge';
+import Avatar from '@mui/material/Avatar';
 import { IconMenu2 } from '@tabler/icons-react';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
@@ -11,9 +12,10 @@ interface AppBarProps {
   onDrawerToggle: () => void;
   hasUnreadMessages?: boolean;
   conversationTitle?: string | null;
+  conversationAvatar?: { src?: string; initial: string };
 }
 
-export default function AppBar({ drawerWidth, onDrawerToggle, hasUnreadMessages = false, conversationTitle }: AppBarProps) {
+export default function AppBar({ drawerWidth, onDrawerToggle, hasUnreadMessages = false, conversationTitle, conversationAvatar }: AppBarProps) {
   return (
     <MuiAppBar
       position="fixed"
@@ -39,32 +41,48 @@ export default function AppBar({ drawerWidth, onDrawerToggle, hasUnreadMessages 
           </Badge>
         </IconButton>
 
-        {/* Mobile: show app name or conversation title */}
-        <Typography
-          variant="h6"
-          sx={{
-            fontFamily: '"Bebas Neue", "Orbitron", sans-serif',
-            letterSpacing: '0.15em',
-            color: 'primary.main',
-            display: { xs: 'block', sm: 'none' },
-            fontSize: '1.25rem',
-          }}
-        >
-          {conversationTitle ?? 'QUICKCHAT'}
-        </Typography>
-
-        {/* Desktop: show conversation title centered in the bar */}
-        {conversationTitle && (
-          <Typography
+        {conversationTitle ? (
+          <Box
             sx={{
-              display: { xs: 'none', sm: 'block' },
-              fontFamily: '"Share Tech Mono", monospace',
-              fontSize: '0.85rem',
-              letterSpacing: '0.08em',
-              color: 'text.secondary',
+              position: 'absolute',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
             }}
           >
-            {conversationTitle}
+            {conversationAvatar && (
+              <Avatar
+                src={conversationAvatar.src}
+                sx={{ width: 26, height: 26, fontSize: '0.65rem', fontWeight: 700 }}
+              >
+                {conversationAvatar.initial}
+              </Avatar>
+            )}
+            <Typography
+              sx={{
+                fontFamily: '"Share Tech Mono", monospace',
+                fontSize: '0.85rem',
+                letterSpacing: '0.08em',
+                color: 'text.secondary',
+              }}
+            >
+              {conversationTitle}
+            </Typography>
+          </Box>
+        ) : (
+          <Typography
+            variant="h6"
+            sx={{
+              fontFamily: '"Bebas Neue", "Orbitron", sans-serif',
+              letterSpacing: '0.15em',
+              color: 'primary.main',
+              display: { xs: 'block', sm: 'none' },
+              fontSize: '1.25rem',
+            }}
+          >
+            QUICKCHAT
           </Typography>
         )}
 

@@ -6,6 +6,7 @@ import ChatWindow from '../components/ChatWindow';
 import { useAuth } from '../contexts/AuthContext';
 import { useSubscribeToConversations } from '../hooks/useSubscribeToConversations';
 import { useConversations } from '../hooks/useConversations';
+import { getAvatarUrl } from '../utils/avatarUrl';
 
 const drawerWidth = 240;
 
@@ -22,15 +23,23 @@ export default function MainLayout() {
   // Fetch conversations to detect unread messages for AppBar badge
   const { data: conversations } = useConversations(profile?.id || null);
 
-  // Derive the title for the selected conversation
-  const conversationTitle = React.useMemo(() => {
-    if (!selectedConversationId || !conversations || !profile?.id) return null;
+  // Derive the title and avatar for the selected conversation
+  const { conversationTitle, conversationAvatar } = React.useMemo(() => {
+    if (!selectedConversationId || !conversations || !profile?.id) {
+      return { conversationTitle: null, conversationAvatar: undefined };
+    }
     const conv = conversations.find(c => c.id === selectedConversationId);
-    if (!conv) return null;
-    const others = conv.participants
-      .filter(p => p.profile.id !== profile.id)
-      .map(p => p.profile.username);
-    return others.length > 0 ? others.join(', ') : null;
+    if (!conv) return { conversationTitle: null, conversationAvatar: undefined };
+    const others = conv.participants.filter(p => p.profile.id !== profile.id);
+    if (others.length === 0) return { conversationTitle: null, conversationAvatar: undefined };
+    const first = others[0].profile;
+    return {
+      conversationTitle: others.map(p => p.profile.username).join(', '),
+      conversationAvatar: {
+        src: getAvatarUrl(first.avatar_url, first.updated_at),
+        initial: first.username?.[0]?.toUpperCase() ?? '?',
+      },
+    };
   }, [selectedConversationId, conversations, profile?.id]);
 
   // Check if there are any unread messages across all conversations
@@ -70,7 +79,7 @@ export default function MainLayout() {
 
   return (
     <Box sx={{ display: 'flex' }}>
-      <AppBar drawerWidth={drawerWidth} onDrawerToggle={handleDrawerToggle} hasUnreadMessages={hasUnreadMessages} conversationTitle={conversationTitle} />
+      <AppBar drawerWidth={drawerWidth} onDrawerToggle={handleDrawerToggle} hasUnreadMessages={hasUnreadMessages} conversationTitle={conversationTitle} conversationAvatar={conversationAvatar} />
       <Drawer
         drawerWidth={drawerWidth}
         mobileOpen={mobileOpen}
