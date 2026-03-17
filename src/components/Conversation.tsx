@@ -12,6 +12,7 @@ import MenuItem from '@mui/material/MenuItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import { IconDotsVertical, IconTrash } from '@tabler/icons-react';
 import { ConversationListItem } from '../types/database.types';
+import { getAvatarUrl } from '../utils/avatarUrl';
 import { useAuth } from '../contexts/AuthContext';
 import Stack from '@mui/material/Stack';
 import Box from '@mui/material/Box';
@@ -46,7 +47,7 @@ function getConversationAvatar(conversation: ConversationListItem, currentUserId
 
   const firstOther = otherParticipants[0].profile;
   return {
-    src: firstOther.avatar_url || undefined,
+    src: getAvatarUrl(firstOther.avatar_url, firstOther.updated_at),
     initial: firstOther.username?.[0]?.toUpperCase() || '?',
   };
 }

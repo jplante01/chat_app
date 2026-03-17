@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User, Session } from '@supabase/supabase-js'
 import supabase from '../../utils/supabase'
 import type { Profile } from '../types/database.types'
+import { useProfile } from '../hooks/useProfile'
 
 interface AuthContextType {
   user: User | null
@@ -18,8 +19,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
-  const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+
+  const { data: profile = null } = useProfile(user?.id)
 
   // Initialize session and listen to auth changes
   useEffect(() => {
@@ -37,35 +39,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('Auth event:', event)
       setSession(session)
       setUser(session?.user ?? null)
-
-      if (event === 'SIGNED_OUT') {
-        setProfile(null)
-      }
     })
 
     return () => subscription.unsubscribe()
   }, [])
-
-  // Fetch profile when session changes (separate effect)
-  useEffect(() => {
-    if (session?.user?.id) {
-      supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single()
-        .then(({ data, error }) => {
-          if (error) {
-            console.error('Error fetching profile:', error)
-            setProfile(null)
-          } else {
-            setProfile(data)
-          }
-        })
-    } else {
-      setProfile(null)
-    }
-  }, [session?.user?.id])
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({

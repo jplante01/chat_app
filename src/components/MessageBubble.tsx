@@ -2,6 +2,7 @@ import Box from '@mui/material/Box';
 import Avatar from '@mui/material/Avatar';
 import Typography from '@mui/material/Typography';
 import { MessageWithSender } from '../types/database.types';
+import { getAvatarUrl } from '../utils/avatarUrl';
 
 interface MessageBubbleProps {
   message: MessageWithSender;
@@ -31,7 +32,7 @@ export default function MessageBubble({ message, isOwnMessage, showAvatar = true
     >
       {showAvatar && (
         <Avatar
-          src={message.sender.avatar_url || undefined}
+          src={getAvatarUrl(message.sender.avatar_url, message.sender.updated_at)}
           sx={{
             width: { xs: 28, sm: 32 },
             height: { xs: 28, sm: 32 },

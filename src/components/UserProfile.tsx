@@ -1,9 +1,14 @@
+import { useRef } from 'react';
 import Box from '@mui/material/Box';
 import Avatar from '@mui/material/Avatar';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
-import { IconSettings } from '@tabler/icons-react';
+import CircularProgress from '@mui/material/CircularProgress';
+import { IconSettings, IconCamera } from '@tabler/icons-react';
 import { Profile } from '../types/database.types';
+import { useAuth } from '../contexts/AuthContext';
+import { useUploadAvatar } from '../hooks/useProfile';
+import { getAvatarUrl } from '../utils/avatarUrl';
 
 interface UserProfileProps {
   profile: Profile;
@@ -11,6 +16,17 @@ interface UserProfileProps {
 }
 
 export default function UserProfile({ profile, onSettingsClick }: UserProfileProps) {
+  const { user } = useAuth();
+  const { mutate: uploadAvatar, isPending: uploading } = useUploadAvatar(user!.id);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    uploadAvatar(file);
+    e.target.value = '';
+  };
+
   return (
     <Box
       sx={{
@@ -23,19 +39,65 @@ export default function UserProfile({ profile, onSettingsClick }: UserProfilePro
         minHeight: { xs: '48px', sm: '52px' },
       }}
     >
-      <Avatar
-        src={profile.avatar_url || undefined}
-        sx={{
-          width: 32,
-          height: 32,
-          bgcolor: 'primary.main',
-          color: 'primary.contrastText',
-          fontSize: '0.75rem',
-          fontWeight: 700,
-        }}
+      <Box
+        sx={{ position: 'relative', cursor: 'pointer', flexShrink: 0 }}
+        onClick={() => inputRef.current?.click()}
       >
-        {profile.username?.[0]?.toUpperCase() || '?'}
-      </Avatar>
+        <Avatar
+          src={getAvatarUrl(profile.avatar_url, profile.updated_at)}
+          sx={{
+            width: 32,
+            height: 32,
+            bgcolor: 'primary.main',
+            color: 'primary.contrastText',
+            fontSize: '0.75rem',
+            fontWeight: 700,
+          }}
+        >
+          {profile.username?.[0]?.toUpperCase() || '?'}
+        </Avatar>
+
+        {uploading ? (
+          <Box
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              bgcolor: 'rgba(0,0,0,0.5)',
+              borderRadius: '50%',
+            }}
+          >
+            <CircularProgress size={16} sx={{ color: 'white' }} />
+          </Box>
+        ) : (
+          <Box
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              bgcolor: 'rgba(0,0,0,0.5)',
+              borderRadius: '50%',
+              opacity: 0,
+              transition: 'opacity 0.15s',
+              '&:hover': { opacity: 1 },
+            }}
+          >
+            <IconCamera size={14} color="white" />
+          </Box>
+        )}
+
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          style={{ display: 'none' }}
+          onChange={handleFileChange}
+        />
+      </Box>
 
       <Box sx={{ flexGrow: 1, minWidth: 0 }}>
         <Typography

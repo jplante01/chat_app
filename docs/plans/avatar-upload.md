@@ -1,17 +1,32 @@
-# Avatar Upload Feature Plan
+# Avatar Upload Feature — Implementation Plan
 
 ## Overview
 
-Allow users to upload a profile picture from their computer. The image is optimized client-side before being stored in Supabase Storage, and the resulting public URL is saved to `profiles.avatar_url`.
+Users can upload a profile picture from `UserProfile`. The image is optimized client-side, uploaded to Supabase Storage, and the profile is updated automatically via a database trigger. Profile state in the app is managed by React Query and kept fresh via cache invalidation on writes.
+
+---
+
+## Architecture
+
+### Atomic upload via DB trigger
+
+The frontend only uploads the file to storage. A Postgres trigger on `storage.objects` automatically updates `profiles.avatar_url` whenever a file lands in the `avatars` bucket — no second network call from the client.
+
+`profiles.avatar_url` stores the **storage path** (e.g. `<uuid>.webp`), not a full URL. This keeps the trigger environment-agnostic. The app constructs the full URL with a `getAvatarUrl()` helper that calls `supabase.storage.from('avatars').getPublicUrl(path)`.
+
+### React Query for profile state
+
+The current user's profile is fetched and cached via React Query. After any write operation (e.g. avatar upload), the caller invalidates the profile query key — React Query refetches automatically. No realtime subscription needed; cache invalidation on writes is sufficient.
 
 ---
 
 ## Current State
 
-- `profiles.avatar_url` column already exists and is already consumed by `UserProfile`, `MessageBubble`, `UserSearch`, and `Conversation` components — all fall back to the username initial when null
-- Supabase Storage is enabled globally but no bucket exists yet
-- `profilesDb` has no upload method
-- `AuthContext` holds `profile` state and is the source of truth for the current user's profile across the app
+- `profiles.avatar_url` column already exists and is consumed by `UserProfile`, `MessageBubble`, `UserSearch`, and `Conversation` — all fall back to the username initial when null
+- No storage bucket exists yet
+- `profilesDb` has no `updateAvatar` method
+- `AuthContext` manually fetches profile on session change — no React Query yet
+- `@tanstack/react-query` is already installed and `QueryProvider` exists at `src/providers/QueryProvider.tsx`
 
 ---
 
@@ -25,58 +40,82 @@ Allow users to upload a profile picture from their computer. The image is optimi
 
 ## Implementation Steps
 
-### Step 1 — Supabase Storage Bucket (Migration)
+### 1. Storage bucket + trigger migration
 
-Create `supabase/migrations/<timestamp>_avatar_storage.sql`:
+`supabase/migrations/<timestamp>_avatar_storage.sql`
 
 ```sql
+-- Bucket
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (
-  'avatars',
-  'avatars',
-  true,
-  5242880, -- 5MB
+  'avatars', 'avatars', true, 5242880,
   ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 );
 
--- Authenticated users can upload their own avatar
+-- RLS
 CREATE POLICY "Users can upload their own avatar"
 ON storage.objects FOR INSERT TO authenticated
-WITH CHECK (bucket_id = 'avatars' AND name = auth.uid()::text);
+WITH CHECK (bucket_id = 'avatars' AND starts_with(name, auth.uid()::text));
 
--- Authenticated users can replace their own avatar
 CREATE POLICY "Users can update their own avatar"
 ON storage.objects FOR UPDATE TO authenticated
-USING (bucket_id = 'avatars' AND name = auth.uid()::text);
+USING (bucket_id = 'avatars' AND starts_with(name, auth.uid()::text));
 
--- Anyone can read avatars (public bucket)
 CREATE POLICY "Avatars are publicly readable"
 ON storage.objects FOR SELECT TO public
 USING (bucket_id = 'avatars');
+
+-- Trigger: update profiles.avatar_url on storage upload
+CREATE OR REPLACE FUNCTION storage.update_profile_avatar()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.bucket_id = 'avatars' THEN
+    UPDATE public.profiles
+    SET avatar_url = NEW.name
+    WHERE id = split_part(NEW.name, '.', 1)::uuid;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER on_avatar_upload
+AFTER INSERT OR UPDATE ON storage.objects
+FOR EACH ROW EXECUTE FUNCTION storage.update_profile_avatar();
 ```
 
-Apply locally: `npx supabase db reset`
-
-> Note: No type regeneration needed — storage operations use the Supabase JS client directly, not generated types.
+Apply: `npx supabase db reset`
 
 ---
 
-### Step 2 — Client-Side Image Optimization Utility
+### 2. `getAvatarUrl` helper
 
-Create `src/utils/optimizeImage.ts`:
+`src/utils/avatarUrl.ts`
+
+```ts
+import supabase from '../../utils/supabase';
+
+export function getAvatarUrl(path: string | null | undefined): string | undefined {
+  if (!path) return undefined;
+  return supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl;
+}
+```
+
+---
+
+### 3. Client-side image optimization
+
+`src/utils/optimizeImage.ts`
 
 ```ts
 export async function optimizeImage(file: File, maxSize = 256): Promise<Blob> {
   const bitmap = await createImageBitmap(file);
-
   const scale = Math.min(maxSize / bitmap.width, maxSize / bitmap.height, 1);
   const width = Math.round(bitmap.width * scale);
   const height = Math.round(bitmap.height * scale);
-
   const canvas = new OffscreenCanvas(width, height);
   const ctx = canvas.getContext('2d')!;
   ctx.drawImage(bitmap, 0, 0, width, height);
-
+  bitmap.close();
   return canvas.convertToBlob({ type: 'image/webp', quality: 0.85 });
 }
 ```
@@ -88,97 +127,121 @@ export async function optimizeImage(file: File, maxSize = 256): Promise<Blob> {
 
 ---
 
-### Step 3 — Add `updateAvatar` to `profilesDb`
+### 4. `profilesDb.updateAvatar` — storage upload only
 
-Add to `src/db/profiles.ts`:
+`src/db/profiles.ts`
+
+`updateAvatar` uploads the optimized file and returns the storage path. The trigger handles the `profiles` table update — no second DB call from the frontend.
 
 ```ts
 import { optimizeImage } from '../utils/optimizeImage';
 
-// inside profilesDb:
-
 /**
- * Optimize, upload, and link a new avatar image for a user
- * Used for: Avatar upload in UserProfile settings
- * Filename is always `<userId>.webp` — overwrites the previous avatar in-place
+ * Optimize and upload a new avatar to storage.
+ * The DB trigger on storage.objects automatically updates profiles.avatar_url.
+ * Returns the storage path (not a full URL).
  */
 updateAvatar: async (userId: string, file: File): Promise<string> => {
   const optimized = await optimizeImage(file);
   const path = `${userId}.webp`;
 
-  const { error: uploadError } = await supabase.storage
+  const { error } = await supabase.storage
     .from('avatars')
     .upload(path, optimized, { upsert: true, contentType: 'image/webp' });
 
-  if (uploadError) throw uploadError;
-
-  const { data: { publicUrl } } = supabase.storage
-    .from('avatars')
-    .getPublicUrl(path);
-
-  const { error: updateError } = await supabase
-    .from('profiles')
-    .update({ avatar_url: publicUrl })
-    .eq('id', userId);
-
-  if (updateError) throw updateError;
-
-  return publicUrl;
+  if (error) throw error;
+  return path;
 },
 ```
 
 ---
 
-### Step 4 — Expose `updateProfile` in `AuthContext`
+### 5. React Query hook for profile state
 
-`AuthContext` owns `profile` state. After a successful upload the new `avatar_url` must be reflected everywhere without a page reload.
-
-Add to `AuthContext`:
+`src/hooks/useProfile.ts`
 
 ```ts
-// In AuthContextType interface:
-updateProfile: (updates: Partial<Profile>) => void;
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { profilesDb } from '../db';
 
-// In AuthProvider:
-const updateProfile = (updates: Partial<Profile>) => {
-  setProfile(prev => prev ? { ...prev, ...updates } : prev);
-};
+export function profileQueryKey(userId: string) {
+  return ['profile', userId];
+}
 
-// Include in value object:
-const value = { ..., updateProfile };
+export function useProfile(userId: string | undefined) {
+  return useQuery({
+    queryKey: userId ? profileQueryKey(userId) : [],
+    queryFn: () => profilesDb.getById(userId!),
+    enabled: !!userId,
+  });
+}
+
+export function useInvalidateProfile() {
+  const queryClient = useQueryClient();
+  return (userId: string) =>
+    queryClient.invalidateQueries({ queryKey: profileQueryKey(userId) });
+}
 ```
 
 ---
 
-### Step 5 — Upload UI in `UserProfile.tsx`
+### 6. Update `AuthContext`
 
-The avatar in `UserProfile` is already rendered. Wrap it to make it clickable and wire up the file input:
+Remove the manual `supabase.from('profiles').select()` effect and source `profile` from React Query instead.
+
+```ts
+// Remove: useEffect that fetches profile from supabase directly
+// Remove: updateProfile function and its AuthContextType entry
+// Add: const { data: profile } = useProfile(user?.id)
+// Keep: profile exposed in context value (same interface for consumers)
+```
+
+---
+
+### 7. `UserProfile` upload UI
+
+Add a clickable avatar with a camera hover hint, hidden file input, and loading spinner. After upload, invalidate the profile query — no manual state patching.
 
 ```tsx
-const { user, updateProfile } = useAuth();
-const [uploading, setUploading] = useState(false);
+const { user } = useAuth();
+const invalidateProfile = useInvalidateProfile();
 const inputRef = useRef<HTMLInputElement>(null);
+const [uploading, setUploading] = useState(false);
 
 const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
   const file = e.target.files?.[0];
   if (!file || !user) return;
   setUploading(true);
   try {
-    const publicUrl = await profilesDb.updateAvatar(user.id, file);
-    updateProfile({ avatar_url: publicUrl });
+    await profilesDb.updateAvatar(user.id, file);
+    await invalidateProfile(user.id);
   } catch (err) {
-    // surface via NotificationContext
+    console.error('Avatar upload failed:', err);
   } finally {
     setUploading(false);
-    e.target.value = ''; // reset so same file can be re-selected
+    e.target.value = '';
   }
 };
 ```
 
-**UI considerations:**
-- Show a loading spinner overlay on the `Avatar` while `uploading` is true
-- On hover, show a camera icon overlay to hint the avatar is clickable
-- The hidden `<input type="file" accept="image/*">` is triggered by clicking the avatar
+Avatar display:
+```tsx
+<Avatar src={getAvatarUrl(profile.avatar_url)} ... />
+```
+
+UI details:
+- Clicking the avatar triggers the hidden `<input type="file" accept="image/*">`
+- Camera icon overlay appears on hover
+- Spinner overlays the avatar while uploading
+
+---
+
+### 8. Update avatar display in other components
+
+Wrap `profile.avatar_url` with `getAvatarUrl()` in:
+- `src/components/MessageBubble.tsx`
+- `src/components/UserSearch.tsx`
+- `src/components/Conversation.tsx`
 
 ---
 
@@ -186,23 +249,25 @@ const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
 
 | File | Action |
 |------|--------|
-| `supabase/migrations/<timestamp>_avatar_storage.sql` | Create |
+| `supabase/migrations/<ts>_avatar_storage.sql` | Create |
+| `src/utils/avatarUrl.ts` | Create |
 | `src/utils/optimizeImage.ts` | Create |
-| `src/db/profiles.ts` | Add `updateAvatar` |
-| `src/contexts/AuthContext.tsx` | Add `updateProfile` |
-| `src/components/UserProfile.tsx` | Add upload UI |
+| `src/hooks/useProfile.ts` | Create |
+| `src/db/profiles.ts` | Add `updateAvatar` (storage upload only) |
+| `src/contexts/AuthContext.tsx` | Remove manual fetch + `updateProfile`; use `useProfile` |
+| `src/components/UserProfile.tsx` | Add upload UI; wrap avatar with `getAvatarUrl()` |
+| `src/components/MessageBubble.tsx` | Wrap avatar with `getAvatarUrl()` |
+| `src/components/UserSearch.tsx` | Wrap avatar with `getAvatarUrl()` |
+| `src/components/Conversation.tsx` | Wrap avatar with `getAvatarUrl()` |
 
 ---
 
-## Testing
+## Verification
 
-Manual testing with local Supabase:
 1. `npx supabase db reset` to apply migration
 2. Sign in as alice@test.com / password123
-3. Click avatar → select an image file
-4. Verify spinner shows during upload
-5. Verify avatar updates immediately after upload
-6. Verify avatar persists after page reload
-7. Verify avatar appears in `MessageBubble` and `Conversation` list
-
-Unit test (optional): `optimizeImage` can be tested by passing a `File` and asserting the returned `Blob` is `image/webp` and smaller than a known input.
+3. Click avatar → upload an image
+4. Confirm avatar updates in sidebar, MessageBubble, and Conversation list
+5. Check network tab — only **one** POST to storage (no second PATCH to profiles)
+6. Check Supabase Studio → `profiles` table: `avatar_url` should contain just the path (e.g. `<uuid>.webp`)
+7. Sign in as Alice in a second tab — upload in tab 1, refresh tab 2 manually and confirm avatar loads correctly

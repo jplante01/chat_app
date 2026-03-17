@@ -13,6 +13,7 @@ import { IconSearch } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { profilesDb } from '../db';
 import { Profile } from '../types/database.types';
+import { getAvatarUrl } from '../utils/avatarUrl';
 
 interface UserSearchProps {
   currentUserId: string;
@@ -66,7 +67,7 @@ export default function UserSearch({ currentUserId, onUserSelect }: UserSearchPr
               <ListItem key={user.id} disablePadding>
                 <ListItemButton onClick={() => handleUserClick(user)}>
                   <ListItemAvatar>
-                    <Avatar src={user.avatar_url || undefined}>
+                    <Avatar src={getAvatarUrl(user.avatar_url, user.updated_at)}>
                       {user.username[0].toUpperCase()}
                     </Avatar>
                   </ListItemAvatar>

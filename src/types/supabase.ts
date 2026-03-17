@@ -1,3 +1,4 @@
+Connecting to db 5432
 export type Json =
   | string
   | number
@@ -156,6 +157,7 @@ export type Database = {
           id: string
           last_seen_at: string
           status: string
+          updated_at: string
           username: string
         }
         Insert: {
@@ -164,6 +166,7 @@ export type Database = {
           id: string
           last_seen_at?: string
           status?: string
+          updated_at?: string
           username: string
         }
         Update: {
@@ -172,6 +175,7 @@ export type Database = {
           id?: string
           last_seen_at?: string
           status?: string
+          updated_at?: string
           username?: string
         }
         Relationships: []
@@ -181,7 +185,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_conversation_with_participants: {
+        Args: { participant_ids: string[] }
+        Returns: string
+      }
+      delete_conversation_and_notify: {
+        Args: { conversation_id: string }
+        Returns: undefined
+      }
+      is_conversation_participant: {
+        Args: { conversation_id: string; user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
@@ -318,3 +333,5 @@ export const Constants = {
   },
 } as const
 
+A new version of Supabase CLI is available: v2.78.1 (currently installed v2.62.5)
+We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
