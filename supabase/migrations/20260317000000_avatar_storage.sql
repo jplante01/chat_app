@@ -38,7 +38,7 @@ ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
 
 -- Trigger: update profiles.avatar_url and updated_at on storage upload
-CREATE OR REPLACE FUNCTION storage.update_profile_avatar()
+CREATE OR REPLACE FUNCTION public.update_profile_avatar()
 RETURNS TRIGGER AS $$
 BEGIN
   IF NEW.bucket_id = 'avatars' THEN
@@ -54,4 +54,4 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 DROP TRIGGER IF EXISTS on_avatar_upload ON storage.objects;
 CREATE TRIGGER on_avatar_upload
 AFTER INSERT OR UPDATE ON storage.objects
-FOR EACH ROW EXECUTE FUNCTION storage.update_profile_avatar();
+FOR EACH ROW EXECUTE FUNCTION public.update_profile_avatar();
